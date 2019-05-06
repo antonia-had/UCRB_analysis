@@ -76,15 +76,13 @@ def writenewDDM(structures, firstLine, sampleCol, k, l):
                 change[m]= float(sample_IWR[line_in_iwr][2+m])-float(hist_IWR[line_in_iwr][2+m])
             # apply change to 1st month
             row_data[2] = str(int(float(row_data[2])+change[0]))
-            # apply multipliers to rest of the columns
+            # apply change to rest of the columns
             for j in range(len(all_split_data_DDM[i+firstLine])-2):
                 row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1])+change[j+1])))
         elif row_data[1] in structures[1]: #If the structure is transbasin (to uncurtail)   
-            # apply multiplier to 1st month
-            row_data[2] = str(int(float(diversions_uc[uncurtailed.index(row_data[1])][1])*LHsamples[k,sampleCol[1]]))
-            # apply multipliers to rest of the columns
+            row_data[2] = str(int(float(diversions_uc[uncurtailed.index(row_data[1])][1])))
             for j in range(1,12):
-                row_data.append(str(int(float(diversions_uc[uncurtailed.index(row_data[1])][j+1])*LHsamples[k,sampleCol[1]]))) 
+                row_data.append(str(int(float(diversions_uc[uncurtailed.index(row_data[1])][j+1])))) 
         elif row_data[1] not in allstructures:
             for j in range(len(all_split_data_DDM[i+firstLine])-2):
                 row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1]))))                      
