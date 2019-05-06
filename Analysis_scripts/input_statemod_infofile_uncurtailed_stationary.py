@@ -175,4 +175,4 @@ for j in range(start, stop):
               os.path.getsize('./Experiment_files/cm2015B_S0_' + str(j+1) + '.xdd') >> 10 > 502000):
         time.sleep(1)
     getinfo(j)
-    os.system("rm ./Experiment_files/cm2015B_S0_{}.xdd ./Experiment_files/cm2015B_S0_{}.xre ./Experiment_files/cm2015B_S0_{}.xss ./Experiment_files/cm2015B_S0_{}.xop ./Experiment_files/cm2015B_S0_{}.xpl ./Experiment_files/cm2015B_S0_{}.xca ./Experiment_files/cm2015B_S0_{}.xrp ./Experiment_files/cm2015B_S0_{}.b*".format(j+1))
+    os.system("rm ./Experiment_files/cm2015B_S0_{}.xdd".format(j+1))
