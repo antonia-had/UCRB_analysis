@@ -18,7 +18,7 @@ irrigation = np.genfromtxt('irrigation.txt',dtype='str').tolist()
 transbasin = np.genfromtxt('TBD.txt',dtype='str').tolist()
 
 # List IDs of structures of interest for output files
-IDs = np.genfromtxt('metrics_structures.txt',dtype='str').tolist() 
+IDs = np.genfromtxt('metrics_structures_short.txt',dtype='str').tolist() 
 info_clmn = [2, 4, 17] # Define columns of aspect of interest 
 
 # =============================================================================
@@ -56,7 +56,7 @@ def writenewDDM(structures, firstLine, sampleCol, k, l):
     allstructures = []
     for m in range(len(structures)):
         allstructures.extend(structures[m])
-    with open('./Experiment_files/cm2015B_S'+ str(k+1) + '_' + str(l+1) + '.iwr') as f:
+    with open('./Experiment_files/cm2015B_S'+ str(k+1) + '_' + str(l+1) + 'f.iwr') as f:
         sample_IWR = [x.split() for x in f.readlines()[463:]]       
     f.close() 
     new_data = []
@@ -165,7 +165,7 @@ else:
 for k in range(start, stop):
     for j in range(10): 
         d = {}
-        d['IWR'] = 'cm2015B_S' + str(k+1) + '_' + str(j+1) + '.iwr'
+        d['IWR'] = 'cm2015B_S' + str(k+1) + '_' + str(j+1) + 'f.iwr'
         d['XBM'] = 'cm2015x_S' + str(k+1) + '_' + str(j+1) + '.xbm'
         d['DDM'] = 'cm2015B_S' + str(k+1) + '_' + str(j+1) + '.ddm'
         S1 = template_RSP.safe_substitute(d)
@@ -181,4 +181,4 @@ for k in range(start, stop):
                   os.path.getsize('./Experiment_files/cm2015B_S'+str(k+1)+ '_' + str(j+1) + '.xdd') >> 10 > 502000):
             time.sleep(1)
         getinfo(k,j)
-        os.system("rm ./Experiment_files/cm2015B_S{}_{}.xdd".format(k+1,j+1))
+        os.system("rm ./Experiment_files/cm2015B_S{0}_{1}.xdd ./Experiment_files/cm2015B_S{0}_{1}.xre ./Experiment_files/cm2015B_S{0}_{1}.xss ./Experiment_files/cm2015B_S{0}_{1}.b44 ./Experiment_files/cm2015B_S{0}_{1}.b67 ./Experiment_files/cm2015B_S{0}_{1}.b43".format(k+1,j+1))
