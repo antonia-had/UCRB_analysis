@@ -179,4 +179,4 @@ for k in range(start, stop):
                   os.path.getsize('./Experiment_files/cm2015B_S'+str(k+1)+ '_' + str(j+1) + '.xdd') >> 10 > 502000):
             time.sleep(1)
         getinfo(k,j)
-        os.system("rm ./Experiment_files/cm2015B_S{0}_{1}.xdd ./Experiment_files/cm2015B_S{0}_{1}.xre ./Experiment_files/cm2015B_S{0}_{1}.xss ./Experiment_files/cm2015B_S{0}_{1}.b44 ./Experiment_files/cm2015B_S{0}_{1}.b67 ./Experiment_files/cm2015B_S{0}_{1}.b43".format(k+1,j+1))
+        os.system("rm ./Experiment_files/cm2015B_S{0}_{1}.xdd ./Experiment_files/cm2015B_S{0}_{1}.xre ./Experiment_files/cm2015B_S{0}_{1}.xss ./Experiment_files/cm2015B_S{0}_{1}.xop ./Experiment_files/cm2015B_S{0}_{1}.xpl ./Experiment_files/cm2015B_S{0}_{1}.xca ./Experiment_files/cm2015B_S{0}_{1}.xrp ./Experiment_files/cm2015B_S{0}_{1}.xbe ./Experiment_files/cm2015B_S{0}_{1}.xbg ./Experiment_files/cm2015B_S{0}_{1}.xgn ./Experiment_files/cm2015B_S{0}_{1}.b*".format(k+1,j+1))
