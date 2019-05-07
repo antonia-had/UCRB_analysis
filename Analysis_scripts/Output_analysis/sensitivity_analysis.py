@@ -63,6 +63,8 @@ scipy.stats.chisqprob = lambda chisq, df: scipy.stats.chi2.sf(chisq, df)
 #==============================================================================
 empty=[]
 n=12
+HIS_short = np.loadtxt('./Global_experiment_uncurtailed/Infofiles/7202003/7202003_info_1_1.txt')[:,2]
+
 
 def shortage_duration(sequence):
     cnt_shrt = [sequence[i]>0 for i in range(len(sequence))] # Returns a list of True values when there's a shortage
@@ -79,14 +81,16 @@ def fitOLS(dta, predictors):
     result = ols.fit()
     return result
 
-def magnitude_sensitivity_analysis_per_structure(ID):
+def sensitivity_analysis_per_structure(ID):
+    '''
+    Perform analysis for shortage magnitude
+    '''
     DELTA = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     DELTA_conf = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     S1 = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     S1_conf = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     R2_scores = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     DELTA.index=DELTA_conf.index=S1.index=S1_conf.index = R2_scores.index = param_names
-    HIS_short = np.loadtxt('./Global_experiment_uncurtailed/Infofiles/7202003/7202003_info_1_1.txt')[:,2]
     SYN_short = np.zeros([len(HIS_short),samples, realizations])
     for j in range(samples):
         for r in range(realizations):
@@ -112,7 +116,7 @@ def magnitude_sensitivity_analysis_per_structure(ID):
     for i in range(len(percentiles)):
         if syn_magnitude[i,:].any():
             try:
-                result= delta.analyze(problem, LHsamples, syn_magnitude[i,:], print_to_console=False, num_resamples=2)
+                result= delta.analyze(problem, np.repeat(LHsamples, realizations, axis = 0), syn_magnitude[i,:], print_to_console=False, num_resamples=2)
                 DELTA[percentiles[i]]= result['delta']
                 DELTA_conf[percentiles[i]] = result['delta_conf']
                 S1[percentiles[i]]=result['S1']
@@ -126,44 +130,33 @@ def magnitude_sensitivity_analysis_per_structure(ID):
     DELTA_conf.to_csv('./Global_experiment_uncurtailed/Magnitude_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
 
     # OLS regression analysis
-    dta = pd.DataFrame(data = LHsamples, columns=param_names)
-#    fig = plt.figure()
+    dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
     for i in range(len(percentiles)):
-        shortage = np.zeros(samples)
-        for k in range(len(samples)):
-                shortage[k]=syn_magnitude[i,k]
-        dta['Shortage']=shortage
+        dta['Shortage']=syn_magnitude[i,:]
         for m in range(params_no):
             predictors = dta.columns.tolist()[m:(m+1)]
             result = fitOLS(dta, predictors)
             R2_scores.at[param_names[m],percentiles[i]]=result.rsquared
     R2_scores.to_csv('./Global_experiment_uncurtailed/Magnitude_Sensitivity_analysis/'+ ID + '_R2.csv')
-
-def duration_sensitivity_analysis_per_structure(ID):
+    
+    '''
+    Perform analysis for shortage duration
+    '''
     DELTA = pd.DataFrame(np.zeros(params_no))
     DELTA_conf = pd.DataFrame(np.zeros(params_no))
     S1 = pd.DataFrame(np.zeros(params_no))
     S1_conf = pd.DataFrame(np.zeros(params_no))
     R2_scores = pd.DataFrame(np.zeros(params_no))
     DELTA.index=DELTA_conf.index=S1.index=S1_conf.index = R2_scores.index = param_names
-    empty_experiments=[]
-    HIS_short = np.loadtxt('./Infofiles/7202003/7202003_info_1.txt')[:,2]
-    SYN_short = np.zeros([len(HIS_short),samples])
-    for j in range(samples):
-        try:
-            syntheticData= np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '.txt')[:,2]
-            SYN_short[:,j]=syntheticData
-        except:
-            empty_experiments.append(j)
 
-    d_synth = np.zeros([int(len(HIS_short)/2),samples]) #int(len(HIS_short)/2) is the max number of non-consecutive shortages
-    for j in range(samples):
+    d_synth = np.zeros([int(len(HIS_short)/2),samples*realizations]) #int(len(HIS_short)/2) is the max number of non-consecutive shortages
+    for j in range(samples*realizations):
         durations = shortage_duration(SYN_short[:,j])
         d_synth[:,j] = np.pad(durations, (0,int(len(HIS_short)/2-len(durations))),'constant', constant_values=(0)) # this pads the array to have all of them be the same length
 
     # Delta Method analysis
     try:
-        result= delta.analyze(problem, LHsamples, d_synth, print_to_console=False)
+        result= delta.analyze(problem, np.repeat(LHsamples, realizations, axis = 0), d_synth, print_to_console=False)
         DELTA=result['delta']
         DELTA_conf=result['delta_conf']
         S1=result['S1']
@@ -173,13 +166,13 @@ def duration_sensitivity_analysis_per_structure(ID):
         DELTA_conf=DELTA_conf
         S1=S1
         S1_conf=S1_conf
-    S1.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_S1.csv')
-    S1_conf.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
-    DELTA.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_DELTA.csv')
-    DELTA_conf.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
+    S1.to_csv('./Global_experiment_uncurtailed/Duration_Sensitivity_analysis/'+ ID + '_S1.csv')
+    S1_conf.to_csv('./Global_experiment_uncurtailed/Duration_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
+    DELTA.to_csv('./Global_experiment_uncurtailed/Duration_Sensitivity_analysis/'+ ID + '_DELTA.csv')
+    DELTA_conf.to_csv('./Global_experiment_uncurtailed/Duration_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
 
     # OLS regression analysis
-    dta = pd.DataFrame(data = LHsamples, columns=param_names)
+    dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
     shortage = np.zeros(samples)
     #Perform for mean duration
     for k in range(samples):
@@ -234,5 +227,4 @@ else:
 
 # Run simulation
 for k in range(start, stop):
-    magnitude_sensitivity_analysis_per_structure(IDs[k])
-    duration_sensitivity_analysis_per_structure(IDs[k])
+    sensitivity_analysis_per_structure(IDs[k])
