@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import scipy.stats
-import os
 import matplotlib.pyplot as plt
 from SALib.analyze import delta
 import itertools
@@ -34,7 +33,7 @@ percentiles = np.arange(0,100)
 #
 #all_IDs = non_irrigation_structures+WDs+irrigation_structures_flat
 IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() 
-nStructures = 1#len(IDs) #len(all_IDs)
+nStructures = len(IDs) #len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
 # calls scipy.stats.chisqprob, which no longer exists
