@@ -16,9 +16,7 @@ SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values f
 samples = len(LHsamples[:,0])
 realizations = 10
 params_no = len(LHsamples[0,:])
-param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
-             'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
-             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11']
+param_names=[x.split(' ')[0] for x in open('./Global_experiment_uncurtailed/uncertain_params.txt').readlines()]
 problem = {
     'num_vars': params_no,
     'names': param_names,

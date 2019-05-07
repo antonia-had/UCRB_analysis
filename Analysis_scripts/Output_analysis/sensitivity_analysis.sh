@@ -1,9 +1,12 @@
 #!/bin/bash
-#PBS -l walltime=4:00:00
-#PBS -l nodes=22:ppn=16
-#PBS -j oe
+#SBATCH --partition=compute
+#SBATCH --nodes=1             # specify number of nodes
+#SBATCH --ntasks-per-node=1  # specify number of core per node
+#SBATCH --export=ALL
+#SBATCH -t 0:30:00            # set max wallclock time
+#SBATCH --job-name="statemod" # name your job
+#SBATCH --output="output.out"
 
-cd $PBS_O_WORKDIR
-source /etc/profile.d/modules.sh
-module load python-2.7.5
-mpirun python sensitivity_analysis.py
+module load python
+module load mpi4py
+ibrun python sensitivity_analysis.py
