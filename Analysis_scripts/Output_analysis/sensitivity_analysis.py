@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import scipy.stats
+import os
 import matplotlib.pyplot as plt
 from SALib.analyze import delta
 import itertools
@@ -9,38 +10,32 @@ from mpi4py import MPI
 import math
 plt.ioff()
 
-LHsamples = np.loadtxt('./LHsamples.txt')
-param_bounds=np.loadtxt('./uncertain_params.txt', usecols=(1,2))
+LHsamples = np.loadtxt('./Global_experiment_uncurtailed/LHsamples.txt')
+param_bounds=np.loadtxt('./Global_experiment_uncurtailed/uncertain_params.txt', usecols=(1,2))
 SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values for base SOW
 experiments = np.arange(len(LHsamples[:,0]))
 params_no = len(LHsamples[0,:])
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11']
-parameter_ranges = [[0.5, 1.5],[0.8, 1.0],[0.5, 1.5],[0.5, 1.5],[0.0, 1.0],
-                    [0.0, 1.0],[-0.5, 1.0],[0.98, 1.02],[0.75, 1.25],
-                    [0.98, 1.02],[0.75, 1.25],[-0.3, 0.3],[-0.3, 0.3], [0, 60]]
 problem = {
     'num_vars': params_no,
     'names': param_names,
     'bounds': param_bounds.tolist()
 }
 
-
-WDs = ['36','37','38','39','45','50','51','52','53','70','72']
-WD_names = ['Blue River','Eagle River','Roaring Fork','Rifle/Elk/Parachute',
-            'Divide','Muddy/Troublesome','U. Colorado/Fraser',
-            'Piney/Cottonwood','N. Colorado','Roan Creek','L. Colorado']
-non_irrigation_structures = np.genfromtxt('non_irrigation.txt',dtype='str').tolist() #list IDs of structures of interest
-irrigation_structures = [[]]*len(WDs)
-for i in range(len(WDs)):
-    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
-
-irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
+#WDs = ['36','37','38','39','45','50','51','52','53','70','72']
+#non_irrigation_structures = np.genfromtxt('non_irrigation.txt',dtype='str').tolist() #list IDs of structures of interest
+#irrigation_structures = [[]]*len(WDs)
+#for i in range(len(WDs)):
+#    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
+#
+#irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
 percentiles = np.arange(0,100)
-
-all_IDs = non_irrigation_structures+WDs+irrigation_structures_flat
-nStructures = len(all_IDs)
+#
+#all_IDs = non_irrigation_structures+WDs+irrigation_structures_flat
+IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() 
+nStructures = len (IDs) #len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
 # calls scipy.stats.chisqprob, which no longer exists
@@ -49,18 +44,18 @@ scipy.stats.chisqprob = lambda chisq, df: scipy.stats.chi2.sf(chisq, df)
 #==============================================================================
 # Accummulated infofiles per WD
 #==============================================================================
-years = np.loadtxt('./Infofiles/7202003/7202003_info_0.txt',usecols = (0))
-for i in range(len(WDs)):
-   if not os.path.exists('./Infofiles/' + WDs[i]):
-       os.makedirs('./Infofiles/' + WDs[i])
-   for j in range(experiments):        
-       accum = np.zeros([1260,2])
-       for ID in irrigation_structures[i]:
-           try:
-               accum += np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(j) +'.txt',usecols = (1,2))
-           except:
-               accum +=np.zeros([1260,2])
-       np.savetxt('./Infofiles/' + WDs[i] + '/' + WDs[i] + '_info_' + str(j) +'.txt',np.concatenate((years[:, np.newaxis],accum), axis=1))
+#years = np.loadtxt('./Infofiles/7202003/7202003_info_0.txt',usecols = (0))
+#for i in range(len(WDs)):
+#   if not os.path.exists('./Infofiles/' + WDs[i]):
+#       os.makedirs('./Infofiles/' + WDs[i])
+#   for j in range(experiments):        
+#       accum = np.zeros([1260,2])
+#       for ID in irrigation_structures[i]:
+#           try:
+#               accum += np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(j) +'.txt',usecols = (1,2))
+#           except:
+#               accum +=np.zeros([1260,2])
+#       np.savetxt('./Infofiles/' + WDs[i] + '/' + WDs[i] + '_info_' + str(j) +'.txt',np.concatenate((years[:, np.newaxis],accum), axis=1))
 
 #==============================================================================
 # Function for water years
@@ -90,15 +85,11 @@ def magnitude_sensitivity_analysis_per_structure(ID):
     S1_conf = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     R2_scores = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     DELTA.index=DELTA_conf.index=S1.index=S1_conf.index = R2_scores.index = param_names
-    empty_experiments=[]
-    HIS_short = np.loadtxt('./Infofiles/7202003/7202003_info_1.txt')[:,2]
+    HIS_short = np.loadtxt('./Global_experiment_uncurtailed/Infofiles/7202003/7202003_info_1_1.txt')[:,2]
     SYN_short = np.zeros([len(HIS_short),len(experiments)])
-    for j in range(len(experiments)-1):
-        try:
-            syntheticData= np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(experiments[j]+1) + '.txt')[:,2]
-            SYN_short[:,j]=syntheticData
-        except:
-            empty_experiments.append(j)
+    for j in range(len(experiments)):
+        syntheticData= np.loadtxt('./Global_experiment_uncurtailed/Infofiles/' +  ID + '/' + ID + '_info_' + str(experiments[j]+1) + '.txt')[:,2]
+        SYN_short[:,j]=syntheticData
     #Reshape into water years
     #Create matrix of [no. years x no. months x no. experiments]
     f_SYN_short = np.zeros([int(np.size(HIS_short)/n),n,len(experiments)])
