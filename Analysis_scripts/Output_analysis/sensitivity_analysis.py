@@ -13,7 +13,8 @@ plt.ioff()
 LHsamples = np.loadtxt('./Global_experiment_uncurtailed/LHsamples.txt')
 param_bounds=np.loadtxt('./Global_experiment_uncurtailed/uncertain_params.txt', usecols=(1,2))
 SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values for base SOW
-experiments = np.arange(len(LHsamples[:,0]))
+samples = len(LHsamples[:,0])
+realizations = 10
 params_no = len(LHsamples[0,:])
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
@@ -48,7 +49,7 @@ scipy.stats.chisqprob = lambda chisq, df: scipy.stats.chi2.sf(chisq, df)
 #for i in range(len(WDs)):
 #   if not os.path.exists('./Infofiles/' + WDs[i]):
 #       os.makedirs('./Infofiles/' + WDs[i])
-#   for j in range(experiments):        
+#   for j in range(samples):        
 #       accum = np.zeros([1260,2])
 #       for ID in irrigation_structures[i]:
 #           try:
@@ -86,22 +87,25 @@ def magnitude_sensitivity_analysis_per_structure(ID):
     R2_scores = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     DELTA.index=DELTA_conf.index=S1.index=S1_conf.index = R2_scores.index = param_names
     HIS_short = np.loadtxt('./Global_experiment_uncurtailed/Infofiles/7202003/7202003_info_1_1.txt')[:,2]
-    SYN_short = np.zeros([len(HIS_short),len(experiments)])
-    for j in range(len(experiments)):
-        syntheticData= np.loadtxt('./Global_experiment_uncurtailed/Infofiles/' +  ID + '/' + ID + '_info_' + str(experiments[j]+1) + '.txt')[:,2]
-        SYN_short[:,j]=syntheticData
-    #Reshape into water years
-    #Create matrix of [no. years x no. months x no. experiments]
-    f_SYN_short = np.zeros([int(np.size(HIS_short)/n),n,len(experiments)])
-    for i in range(len(experiments)):
+    SYN_short = np.zeros([len(HIS_short),samples, realizations])
+    for j in range(samples):
+        for r in range(realizations):
+            syntheticData= np.loadtxt('./Global_experiment_uncurtailed/Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]
+            SYN_short[:,j,r]=syntheticData
+    # Reshape into timeseries x all experiments
+    SYN_short = np.reshape(SYN_short, (len(HIS_short), samples*realizations))
+    # Reshape into water years
+    # Create matrix of [no. years x no. months x no. experiments]
+    f_SYN_short = np.zeros([int(np.size(HIS_short)/n),n, samples*realizations])
+    for i in range(samples):
         f_SYN_short[:,:,i]= np.reshape(SYN_short[:,i], (int(np.size(SYN_short[:,i])/n), n))
 
     # Shortage per water year
     f_SYN_short_WY = np.sum(f_SYN_short,axis=1)
 
     # Identify droughts at percentiles
-    syn_magnitude = np.zeros([len(percentiles),len(experiments)])
-    for j in range(len(experiments)):
+    syn_magnitude = np.zeros([len(percentiles),samples*realizations])
+    for j in range(samples):
         syn_magnitude[:,j]=[np.percentile(f_SYN_short_WY[:,j], i) for i in percentiles]
 
     # Delta Method analysis
@@ -116,24 +120,24 @@ def magnitude_sensitivity_analysis_per_structure(ID):
             except:
                 pass
 
-    S1.to_csv('./Magnitude_Sensitivity_analysis/'+ ID + '_S1.csv')
-    S1_conf.to_csv('./Magnitude_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
-    DELTA.to_csv('./Magnitude_Sensitivity_analysis/'+ ID + '_DELTA.csv')
-    DELTA_conf.to_csv('./Magnitude_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
+    S1.to_csv('./Global_experiment_uncurtailed/Magnitude_Sensitivity_analysis/'+ ID + '_S1.csv')
+    S1_conf.to_csv('./Global_experiment_uncurtailed/Magnitude_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
+    DELTA.to_csv('./Global_experiment_uncurtailed/Magnitude_Sensitivity_analysis/'+ ID + '_DELTA.csv')
+    DELTA_conf.to_csv('./Global_experiment_uncurtailed/Magnitude_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
 
     # OLS regression analysis
     dta = pd.DataFrame(data = LHsamples, columns=param_names)
 #    fig = plt.figure()
     for i in range(len(percentiles)):
-        shortage = np.zeros(len(experiments))
-        for k in range(len(experiments)):
+        shortage = np.zeros(samples)
+        for k in range(len(samples)):
                 shortage[k]=syn_magnitude[i,k]
         dta['Shortage']=shortage
         for m in range(params_no):
             predictors = dta.columns.tolist()[m:(m+1)]
             result = fitOLS(dta, predictors)
             R2_scores.at[param_names[m],percentiles[i]]=result.rsquared
-    R2_scores.to_csv('./Magnitude_Sensitivity_analysis/'+ ID + '_R2.csv')
+    R2_scores.to_csv('./Global_experiment_uncurtailed/Magnitude_Sensitivity_analysis/'+ ID + '_R2.csv')
 
 def duration_sensitivity_analysis_per_structure(ID):
     DELTA = pd.DataFrame(np.zeros(params_no))
@@ -144,16 +148,16 @@ def duration_sensitivity_analysis_per_structure(ID):
     DELTA.index=DELTA_conf.index=S1.index=S1_conf.index = R2_scores.index = param_names
     empty_experiments=[]
     HIS_short = np.loadtxt('./Infofiles/7202003/7202003_info_1.txt')[:,2]
-    SYN_short = np.zeros([len(HIS_short),len(experiments)])
-    for j in range(len(experiments)-1):
+    SYN_short = np.zeros([len(HIS_short),samples])
+    for j in range(samples):
         try:
-            syntheticData= np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(experiments[j]+1) + '.txt')[:,2]
+            syntheticData= np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '.txt')[:,2]
             SYN_short[:,j]=syntheticData
         except:
             empty_experiments.append(j)
 
-    d_synth = np.zeros([int(len(HIS_short)/2),len(experiments)]) #int(len(HIS_short)/2) is the max number of non-consecutive shortages
-    for j in range(len(experiments)):
+    d_synth = np.zeros([int(len(HIS_short)/2),samples]) #int(len(HIS_short)/2) is the max number of non-consecutive shortages
+    for j in range(samples):
         durations = shortage_duration(SYN_short[:,j])
         d_synth[:,j] = np.pad(durations, (0,int(len(HIS_short)/2-len(durations))),'constant', constant_values=(0)) # this pads the array to have all of them be the same length
 
@@ -176,9 +180,9 @@ def duration_sensitivity_analysis_per_structure(ID):
 
     # OLS regression analysis
     dta = pd.DataFrame(data = LHsamples, columns=param_names)
-    shortage = np.zeros(len(experiments))
+    shortage = np.zeros(samples)
     #Perform for mean duration
-    for k in range(len(experiments)):
+    for k in range(samples):
             shortage[k]=np.mean(d_synth[:,k])
     dta['Shortage']=shortage
     for m in range(params_no):
@@ -187,7 +191,7 @@ def duration_sensitivity_analysis_per_structure(ID):
         R2_scores.at[param_names[m],0]=result.rsquared
     R2_scores.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_mean_R2.csv')
     #Perform for median duration
-    for k in range(len(experiments)):
+    for k in range(samples):
             shortage[k]=np.median(d_synth[:,k])
     dta['Shortage']=shortage
     for m in range(params_no):
@@ -196,7 +200,7 @@ def duration_sensitivity_analysis_per_structure(ID):
         R2_scores.at[param_names[m],0]=result.rsquared
     R2_scores.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_median_R2.csv')
     #Perform for max duration
-    for k in range(len(experiments)):
+    for k in range(samples):
             shortage[k]=np.max(d_synth[:,k])
     dta['Shortage']=shortage
     for m in range(params_no):
@@ -205,7 +209,30 @@ def duration_sensitivity_analysis_per_structure(ID):
         R2_scores.at[param_names[m],0]=result.rsquared
     R2_scores.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_max_R2.csv')
 
+# =============================================================================
+# Start parallelization (running each structure in parallel)
+# =============================================================================
+    
+# Begin parallel simulation
+comm = MPI.COMM_WORLD
+
+# Get the number of processors and the rank of processors
+rank = comm.rank
+nprocs = comm.size
+
+# Determine the chunk which each processor will neeed to do
+count = int(math.floor(nStructures/nprocs))
+remainder = nStructures % nprocs
+
+# Use the processor rank to determine the chunk of work each processor will do
+if rank < remainder:
+	start = rank*(count+1)
+	stop = start + count + 1
+else:
+	start = remainder*(count+1) + (rank-remainder)*count
+	stop = start + count
+
 # Run simulation
-for i in range(len(all_IDs)):
-    magnitude_sensitivity_analysis_per_structure(all_IDs[i])
-    duration_sensitivity_analysis_per_structure(all_IDs[i])
+for k in range(start, stop):
+    magnitude_sensitivity_analysis_per_structure(IDs[k])
+    duration_sensitivity_analysis_per_structure(IDs[k])
