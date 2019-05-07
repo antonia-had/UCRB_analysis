@@ -34,7 +34,7 @@ percentiles = np.arange(0,100)
 #
 #all_IDs = non_irrigation_structures+WDs+irrigation_structures_flat
 IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() 
-nStructures = len (IDs) #len(all_IDs)
+nStructures = 1#len(IDs) #len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
 # calls scipy.stats.chisqprob, which no longer exists
@@ -171,34 +171,27 @@ def sensitivity_analysis_per_structure(ID):
 
     # OLS regression analysis
     dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
-    shortage = np.zeros(samples)
     #Perform for mean duration
-    for k in range(samples):
-            shortage[k]=np.mean(d_synth[:,k])
-    dta['Shortage']=shortage
+    dta['Shortage']=np.mean(d_synth, axis = 0)
     for m in range(params_no):
         predictors = dta.columns.tolist()[m:(m+1)]
         result = fitOLS(dta, predictors)
         R2_scores.at[param_names[m],0]=result.rsquared
-    R2_scores.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_mean_R2.csv')
+    R2_scores.to_csv('./Global_experiment_uncurtailed/Duration_Sensitivity_analysis/'+ ID + '_mean_R2.csv')
     #Perform for median duration
-    for k in range(samples):
-            shortage[k]=np.median(d_synth[:,k])
-    dta['Shortage']=shortage
+    dta['Shortage']=np.median(d_synth, axis = 0)
     for m in range(params_no):
         predictors = dta.columns.tolist()[m:(m+1)]
         result = fitOLS(dta, predictors)
         R2_scores.at[param_names[m],0]=result.rsquared
-    R2_scores.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_median_R2.csv')
+    R2_scores.to_csv('./Global_experiment_uncurtailed/Duration_Sensitivity_analysis/'+ ID + '_median_R2.csv')
     #Perform for max duration
-    for k in range(samples):
-            shortage[k]=np.max(d_synth[:,k])
-    dta['Shortage']=shortage
+    dta['Shortage']=np.max(d_synth, axis = 0)
     for m in range(params_no):
         predictors = dta.columns.tolist()[m:(m+1)]
         result = fitOLS(dta, predictors)
         R2_scores.at[param_names[m],0]=result.rsquared
-    R2_scores.to_csv('./Duration_Sensitivity_analysis/'+ ID + '_max_R2.csv')
+    R2_scores.to_csv('./Global_experiment_uncurtailed/Duration_Sensitivity_analysis/'+ ID + '_max_R2.csv')
 
 # =============================================================================
 # Start parallelization (running each structure in parallel)
