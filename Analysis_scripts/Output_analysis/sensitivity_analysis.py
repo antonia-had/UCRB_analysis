@@ -5,8 +5,8 @@ import scipy.stats
 import matplotlib.pyplot as plt
 from SALib.analyze import delta
 import itertools
-from mpi4py import MPI
-import math
+#from mpi4py import MPI
+#import math
 plt.ioff()
 
 LHsamples = np.loadtxt('./Global_experiment_uncurtailed/LHsamples.txt')
@@ -33,7 +33,7 @@ percentiles = np.arange(0,100)
 #
 #all_IDs = non_irrigation_structures+WDs+irrigation_structures_flat
 IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() 
-nStructures = len(IDs) #len(all_IDs)
+nStructures = 1#len(IDs) #len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
 # calls scipy.stats.chisqprob, which no longer exists
@@ -106,7 +106,7 @@ def sensitivity_analysis_per_structure(ID):
 
     # Identify droughts at percentiles
     syn_magnitude = np.zeros([len(percentiles),samples*realizations])
-    for j in range(samples):
+    for j in range(samples*realizations):
         syn_magnitude[:,j]=[np.percentile(f_SYN_short_WY[:,j], i) for i in percentiles]
 
     # Delta Method analysis
@@ -196,25 +196,25 @@ def sensitivity_analysis_per_structure(ID):
 # Start parallelization (running each structure in parallel)
 # =============================================================================
     
-# Begin parallel simulation
-comm = MPI.COMM_WORLD
-
-# Get the number of processors and the rank of processors
-rank = comm.rank
-nprocs = comm.size
-
-# Determine the chunk which each processor will neeed to do
-count = int(math.floor(nStructures/nprocs))
-remainder = nStructures % nprocs
-
-# Use the processor rank to determine the chunk of work each processor will do
-if rank < remainder:
-	start = rank*(count+1)
-	stop = start + count + 1
-else:
-	start = remainder*(count+1) + (rank-remainder)*count
-	stop = start + count
+## Begin parallel simulation
+#comm = MPI.COMM_WORLD
+#
+## Get the number of processors and the rank of processors
+#rank = comm.rank
+#nprocs = comm.size
+#
+## Determine the chunk which each processor will neeed to do
+#count = int(math.floor(nStructures/nprocs))
+#remainder = nStructures % nprocs
+#
+## Use the processor rank to determine the chunk of work each processor will do
+#if rank < remainder:
+#	start = rank*(count+1)
+#	stop = start + count + 1
+#else:
+#	start = remainder*(count+1) + (rank-remainder)*count
+#	stop = start + count
 
 # Run simulation
-for k in range(start, stop):
+for k in range(nStructures):#start, stop):
     sensitivity_analysis_per_structure(IDs[k])
