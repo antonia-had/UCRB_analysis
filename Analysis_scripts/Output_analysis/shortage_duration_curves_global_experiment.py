@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
+plt.switch_backend('agg')
 import matplotlib.patches
 from scipy import stats
 import pandas as pd
@@ -167,7 +168,8 @@ def plotSDC(synthetic, histData, structure_name):
             for param in param_names:
                     value = (globalmax[p]-globalmin[p])*delta_values.at[param,str(p)]/total
                     delta_values.set_value(param,str(p),value)
-    delta_values = delta_values.round(decimals = 2)
+    for column in delta_values:
+        delta_values[column] = delta_values[column].round(decimals = 2)
     delta_values_to_plot = delta_values.values.tolist()
     
     S1_values = pd.read_csv('./Magnitude_Sensitivity_analysis/'+ structure_name + '_S1.csv')
@@ -184,7 +186,8 @@ def plotSDC(synthetic, histData, structure_name):
             for param in param_names+['Interaction']:
                 value = (globalmax[p]-globalmin[p])*S1_values.at[param,str(p)]
                 S1_values.set_value(param,str(p),value)                
-    S1_values = S1_values.round(decimals = 2)
+    for column in S1_values:
+        S1_values[column] = S1_values[column].round(decimals = 2)
     S1_values_to_plot = S1_values.values.tolist()
 
     R2_values = pd.read_csv('./Magnitude_Sensitivity_analysis/'+ structure_name + '_R2.csv')
@@ -201,7 +204,8 @@ def plotSDC(synthetic, histData, structure_name):
             for param in param_names+['Interaction']:
                 value = (globalmax[p]-globalmin[p])*R2_values.at[param,str(percentiles[p])]
                 R2_values.set_value(param,str(percentiles[p]),value)
-    R2_values = R2_values.round(decimals = 2)
+    for column in R2_values:
+        R2_values[column] = R2_values[column].round(decimals = 2)
     R2_values_to_plot = R2_values.values.tolist()
     
     color_list = ["white", "#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#F77632"]     
