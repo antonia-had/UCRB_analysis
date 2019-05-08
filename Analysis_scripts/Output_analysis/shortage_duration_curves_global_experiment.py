@@ -26,10 +26,10 @@ parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss',
                         'Evaporation delta', 'Dry state mu', 
                         'Dry state sigma', 'Wet state mu', 
                         'Wet state sigma', 'Dry-to-dry state prob.', 
-                        'Wet-to-wet state prob.', 'Interaction']
+                        'Wet-to-wet state prob.', 'Interaction', 'Earlier snowmelt']
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
-             'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
-             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11']
+             'ShoshoneDMND','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
+             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
 percentiles = np.arange(0,100)
 samples = 1000
 realizations = 10
