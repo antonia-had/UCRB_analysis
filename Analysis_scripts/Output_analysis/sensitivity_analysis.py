@@ -98,7 +98,7 @@ def sensitivity_analysis_per_structure(ID):
     # Reshape into water years
     # Create matrix of [no. years x no. months x no. experiments]
     f_SYN_short = np.zeros([int(np.size(HIS_short)/n),n, samples*realizations])
-    for i in range(samples):
+    for i in range(samples*realizations):
         f_SYN_short[:,:,i]= np.reshape(SYN_short[:,i], (int(np.size(SYN_short[:,i])/n), n))
 
     # Shortage per water year
