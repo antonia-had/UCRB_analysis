@@ -94,26 +94,26 @@ def sensitivity_analysis_per_structure(ID):
             syntheticData= np.loadtxt('./Global_experiment_uncurtailed/Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]
             SYN_short[:,j,r]=syntheticData
     # Reshape into timeseries x all experiments
-    SYN_short = np.reshape(SYN_short, (len(HIS_short), samples*realizations))
+    SYN_short = np.median(SYN_short, axis=2)
     # Reshape into water years
     # Create matrix of [no. years x no. months x no. experiments]
     f_SYN_short = np.zeros([int(np.size(HIS_short)/n),n, samples*realizations])
-    for i in range(samples*realizations):
+    for i in range(samples):
         f_SYN_short[:,:,i]= np.reshape(SYN_short[:,i], (int(np.size(SYN_short[:,i])/n), n))
 
     # Shortage per water year
     f_SYN_short_WY = np.sum(f_SYN_short,axis=1)
 
     # Identify droughts at percentiles
-    syn_magnitude = np.zeros([len(percentiles),samples*realizations])
-    for j in range(samples*realizations):
+    syn_magnitude = np.zeros([len(percentiles),samples])
+    for j in range(samples):
         syn_magnitude[:,j]=[np.percentile(f_SYN_short_WY[:,j], i) for i in percentiles]
 
     # Delta Method analysis
     for i in range(len(percentiles)):
         if syn_magnitude[i,:].any():
             try:
-                result= delta.analyze(problem, np.repeat(LHsamples, realizations, axis = 0), syn_magnitude[i,:], print_to_console=False, num_resamples=2)
+                result= delta.analyze(problem, LHsamples, syn_magnitude[i,:], print_to_console=False, num_resamples=2)
                 DELTA[percentiles[i]]= result['delta']
                 DELTA_conf[percentiles[i]] = result['delta_conf']
                 S1[percentiles[i]]=result['S1']
@@ -196,25 +196,25 @@ def sensitivity_analysis_per_structure(ID):
 # Start parallelization (running each structure in parallel)
 # =============================================================================
     
-# Begin parallel simulation
-comm = MPI.COMM_WORLD
-
-# Get the number of processors and the rank of processors
-rank = comm.rank
-nprocs = comm.size
-
-# Determine the chunk which each processor will neeed to do
-count = int(math.floor(nStructures/nprocs))
-remainder = nStructures % nprocs
-
-# Use the processor rank to determine the chunk of work each processor will do
-if rank < remainder:
-	start = rank*(count+1)
-	stop = start + count + 1
-else:
-	start = remainder*(count+1) + (rank-remainder)*count
-	stop = start + count
+## Begin parallel simulation
+#comm = MPI.COMM_WORLD
+#
+## Get the number of processors and the rank of processors
+#rank = comm.rank
+#nprocs = comm.size
+#
+## Determine the chunk which each processor will neeed to do
+#count = int(math.floor(nStructures/nprocs))
+#remainder = nStructures % nprocs
+#
+## Use the processor rank to determine the chunk of work each processor will do
+#if rank < remainder:
+#	start = rank*(count+1)
+#	stop = start + count + 1
+#else:
+#	start = remainder*(count+1) + (rank-remainder)*count
+#	stop = start + count
 
 # Run simulation
-for k in range(start, stop):
+for k in range(nStructures):#start, stop):
     sensitivity_analysis_per_structure(IDs[k])
