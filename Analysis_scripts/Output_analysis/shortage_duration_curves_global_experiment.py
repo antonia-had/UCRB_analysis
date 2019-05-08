@@ -1,27 +1,21 @@
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
-#plt.switch_backend('agg')
-import os
-from scipy import stats
-import pandas as pd
 import matplotlib.patches
 import itertools
-#from mpi4py import MPI
-#import math
+from mpi4py import MPI
+import math
 plt.ioff()
 
 WDs = ['36','37','38','39','45','50','51','52','53','70','72']
-WD_names = ['Blue River','Eagle River','Roaring Fork','Rifle/Elk/Parachute',
-            'Divide','Muddy/Troublesome','U. Colorado/Fraser',
-            'Piney/Cottonwood','N. Colorado','Roan Creek','L. Colorado']
 non_irrigation_structures = np.genfromtxt('non_irrigation.txt',dtype='str').tolist() #list IDs of structures of interest
 irrigation_structures = [[]]*len(WDs) 
 for i in range(len(WDs)):
     irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
 irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
 all_IDs = irrigation_structures_flat+WDs+non_irrigation_structures
-nStructures = len(all_IDs)
+IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() 
+nStructures = len(IDs) #len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
                         'TBD demand multiplier', 'M&I demand multiplier', 
@@ -35,25 +29,7 @@ param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11']
 percentiles = np.arange(0,100)
 samples = 1000
-
-## Begin parallel simulation
-#comm = MPI.COMM_WORLD
-#
-## Get the number of processors and the rank of processors
-#rank = comm.rank
-#nprocs = comm.size
-#
-## Determine the chunk which each processor will neeed to do
-#count = int(math.floor(nStructures/nprocs))
-#remainder = nStructures % nprocs
-#
-## Use the processor rank to determine the chunk of work each processor will do
-#if rank < remainder:
-#	start = rank*(count+1)
-#	stop = start + count + 1
-#else:
-#	start = remainder*(count+1) + (rank-remainder)*count
-#	stop = start + count
+realizations = 10
 
 def alpha(i, base=0.2):
     l = lambda x: x+base-x*base
@@ -123,148 +99,173 @@ def plotSDC(synthetic, histData, structure_name):
     fig.savefig('./MultiyearShortageCurves/' + structure_name + '.png')
     fig.clf()
     
-#    #Calculate synthetic shortage duration curves
-#    F_syn = np.empty([int(np.size(histData)/n),samples])
-#    F_syn[:] = np.NaN
-#    for j in range(samples):
-#        F_syn[:,j] = np.sort(synthetic_global_totals[:,j])
-#    
-#    # For each percentile of magnitude, calculate the percentile among the experiments ran
-#    perc_scores = np.zeros_like(F_syn) 
-#    for m in range(int(np.size(histData)/n)):
-#        perc_scores[m,:] = [stats.percentileofscore(F_syn[m,:], j, 'rank') for j in F_syn[m,:]]
-#                
-#    P = np.arange(1.,len(F_hist)+1)*100 / len(F_hist)
-#    
-#    
-#    ylimit = round(np.max(F_syn), -3)
-#    fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
-#    # ax1
-#    handles = []
-#    labels=[]
-#    color = '#000292'
-#    for i in range(len(p)):
-#        ax1.fill_between(P, np.min(F_syn[:,:],1), np.percentile(F_syn[:,:], p[i], axis=1), color=color, alpha = 0.1)
-#        ax1.plot(P, np.percentile(F_syn[:,:], p[i], axis=1), linewidth=0.5, color=color, alpha = 0.3)
-#        handle = matplotlib.patches.Rectangle((0,0),1,1, color=color, alpha=alpha(i, base=0.1))
-#        handles.append(handle)
-#        label = "{:.0f} %".format(100-p[i])
-#        labels.append(label)
-#    ax1.plot(P,F_hist, c='black', linewidth=2, label='Historical record')
-#    ax1.set_ylim(0,ylimit)
-#    ax1.set_xlim(0,100)
-#    ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
-#    ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
-#    ax1.set_ylabel('Annual shortage (af)', fontsize=12)
-#
-#    fig.suptitle('Shortage magnitudes for ' + structure_name, fontsize=16)
-#    plt.subplots_adjust(bottom=0.2)
-#    if not os.path.exists('./ShortagePercentileCurves/'):
-#        os.makedirs('./ShortagePercentileCurves/')
-#    fig.savefig('./ShortagePercentileCurves/' + structure_name + '.svg')
-#    fig.savefig('./ShortagePercentileCurves/' + structure_name + '.png')
-#    fig.clf()
-#    
-    #Sensitivity analysis plots
-#    globalmax = [np.percentile(np.max(F_syn[:,:],1),p) for p in percentiles]
-#    globalmin = [np.percentile(np.min(F_syn[:,:],1),p) for p in percentiles]
-#    
-#    delta_values = pd.read_csv('./Colorado_global_experiment/Magnitude_Sensitivity_analysis/'+ structure_name + '_DELTA.csv')
-#    delta_values.set_index(list(delta_values)[0],inplace=True)
-#    delta_values = delta_values.clip(lower=0)
-#    bottom_row = pd.DataFrame(data=np.array([np.zeros(100)]), index= ['Interaction'], columns=list(delta_values.columns.values))
-#    top_row = pd.DataFrame(data=np.array([globalmin]), index= ['Min'], columns=list(delta_values.columns.values))
-#    delta_values = pd.concat([top_row,delta_values.loc[:],bottom_row])
-#    for p in percentiles:
-#        total = np.sum(delta_values[str(p)])-delta_values.at['Min',str(p)]
-#        if total!=0:
-#            for param in param_names:
-#                    value = (globalmax[p]-globalmin[p])*delta_values.at[param,str(p)]/total
-#                    delta_values.set_value(param,str(p),value)
-#    delta_values = delta_values.round(decimals = 2)
-#    delta_values_to_plot = delta_values.values.tolist()
-#    
-#    S1_values = pd.read_csv('./Colorado_global_experiment/Magnitude_Sensitivity_analysis/'+ structure_name + '_S1.csv')
-#    S1_values.set_index(list(S1_values)[0],inplace=True)
-#    S1_values = S1_values.clip(lower=0)
-#    bottom_row = pd.DataFrame(data=np.array([np.zeros(100)]), index= ['Interaction'], columns=list(S1_values.columns.values))
-#    top_row = pd.DataFrame(data=np.array([globalmin]), index= ['Min'], columns=list(S1_values.columns.values))
-#    S1_values = pd.concat([top_row,S1_values.loc[:],bottom_row])
-#    for p in percentiles:
-#        total = np.sum(S1_values[str(p)])-S1_values.at['Min',str(p)]
-#        if total!=0:
-#            diff = 1-total
-#            S1_values.set_value('Interaction',str(p),diff)
-#            for param in param_names+['Interaction']:
-#                value = (globalmax[p]-globalmin[p])*S1_values.at[param,str(p)]
-#                S1_values.set_value(param,str(p),value)                
-#    S1_values = S1_values.round(decimals = 2)
-#    S1_values_to_plot = S1_values.values.tolist()
-#
-#    R2_values = pd.read_csv('./Colorado_global_experiment/Magnitude_Sensitivity_analysis/'+ structure_name + '_R2.csv')
-#    R2_values.set_index(list(R2_values)[0],inplace=True)
-#    R2_values = R2_values.clip(lower=0)
-#    bottom_row = pd.DataFrame(data=np.array([np.zeros(100)]), index= ['Interaction'], columns=list(R2_values.columns.values))
-#    top_row = pd.DataFrame(data=np.array([globalmin]), index= ['Min'], columns=list(R2_values.columns.values))
-#    R2_values = pd.concat([top_row,R2_values.loc[:],bottom_row])
-#    for p in percentiles:
-#        total = np.sum(R2_values[str(p)])-R2_values.at['Min',str(p)]
-#        if total!=0:
-#            diff = 1-total
-#            R2_values.set_value('Interaction',str(p),diff)
-#            for param in param_names+['Interaction']:
-#                value = (globalmax[p]-globalmin[p])*R2_values.at[param,str(percentiles[p])]
-#                R2_values.set_value(param,str(percentiles[p]),value)
-#    R2_values = R2_values.round(decimals = 2)
-#    R2_values_to_plot = R2_values.values.tolist()
-#    
-#    color_list = ["white", "#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#F77632"]     
-#    
-#    fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize=(14.5,8))
-#    ax1.stackplot(np.arange(0,100), delta_values_to_plot, colors = color_list, labels=parameter_names_long)
-#    ax1.plot(percentiles, globalmax, color='black', linewidth=2)
-#    ax1.plot(percentiles, globalmin, color='black', linewidth=2)
-#    ax1.set_title("Delta index")
-#    ax1.set_ylim(0,ylimit)
-#    ax1.set_xlim(0,100)
-#    ax2.stackplot(np.arange(0,100), S1_values_to_plot, colors = color_list, labels=parameter_names_long)
-#    ax2.plot(percentiles, globalmax, color='black', linewidth=2)
-#    ax2.plot(percentiles, globalmin, color='black', linewidth=2)
-#    ax2.set_title("S1")
-#    ax2.set_ylim(0,ylimit)
-#    ax2.set_xlim(0,100)
-#    ax3.stackplot(np.arange(0,100), R2_values_to_plot, colors = color_list, labels=parameter_names_long)
-#    ax3.plot(percentiles, globalmax, color='black', linewidth=2)
-#    ax3.plot(percentiles, globalmin, color='black', linewidth=2)
-#    ax3.set_title("R^2")
-#    ax3.set_ylim(0,ylimit)
-#    ax3.set_xlim(0,100)
-#    handles, labels = ax3.get_legend_handles_labels()
-#    ax1.set_ylabel('Annual shortage (af)', fontsize=12)
-#    ax2.set_xlabel('Shortage magnitude percentile', fontsize=12)
-#    fig.legend(handles[1:], labels[1:], fontsize=10, loc='lower center',ncol = 5)
-#    plt.subplots_adjust(bottom=0.2)
-#    fig.suptitle('Shortage magnitude sensitivity for '+ structure_name, fontsize=16)
-#    if not os.path.exists('./ShortageSensitivityCurves/'):
-#        os.makedirs('./ShortageSensitivityCurves/')
-#    fig.savefig('./ShortageSensitivityCurves/' + structure_name + '.svg')
-#    fig.savefig('./ShortageSensitivityCurves/' + structure_name + '.png')
+    #Calculate synthetic shortage duration curves
+    F_syn = np.empty([int(np.size(histData)/n),samples])
+    F_syn[:] = np.NaN
+    for j in range(samples):
+        F_syn[:,j] = np.sort(synthetic_global_totals[:,j])
+    
+    # For each percentile of magnitude, calculate the percentile among the experiments ran
+    perc_scores = np.zeros_like(F_syn) 
+    for m in range(int(np.size(histData)/n)):
+        perc_scores[m,:] = [stats.percentileofscore(F_syn[m,:], j, 'rank') for j in F_syn[m,:]]
+                
+    P = np.arange(1.,len(F_hist)+1)*100 / len(F_hist)
+    
+    
+    ylimit = round(np.max(F_syn), -3)
+    fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
+    # ax1
+    handles = []
+    labels=[]
+    color = '#000292'
+    for i in range(len(p)):
+        ax1.fill_between(P, np.min(F_syn[:,:],1), np.percentile(F_syn[:,:], p[i], axis=1), color=color, alpha = 0.1)
+        ax1.plot(P, np.percentile(F_syn[:,:], p[i], axis=1), linewidth=0.5, color=color, alpha = 0.3)
+        handle = matplotlib.patches.Rectangle((0,0),1,1, color=color, alpha=alpha(i, base=0.1))
+        handles.append(handle)
+        label = "{:.0f} %".format(100-p[i])
+        labels.append(label)
+    ax1.plot(P,F_hist, c='black', linewidth=2, label='Historical record')
+    ax1.set_ylim(0,ylimit)
+    ax1.set_xlim(0,100)
+    ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
+    ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
+    ax1.set_ylabel('Annual shortage (af)', fontsize=12)
 
-for i in range(len(all_IDs)):
+    fig.suptitle('Shortage magnitudes for ' + structure_name, fontsize=16)
+    plt.subplots_adjust(bottom=0.2)
+    if not os.path.exists('./ShortagePercentileCurves/'):
+        os.makedirs('./ShortagePercentileCurves/')
+    fig.savefig('./ShortagePercentileCurves/' + structure_name + '.svg')
+    fig.savefig('./ShortagePercentileCurves/' + structure_name + '.png')
+    fig.clf()
+    
+    '''
+    Sensitivity analysis plots
+    '''
+    globalmax = [np.percentile(np.max(F_syn[:,:],1),p) for p in percentiles]
+    globalmin = [np.percentile(np.min(F_syn[:,:],1),p) for p in percentiles]
+    
+    delta_values = pd.read_csv('./Colorado_global_experiment/Magnitude_Sensitivity_analysis/'+ structure_name + '_DELTA.csv')
+    delta_values.set_index(list(delta_values)[0],inplace=True)
+    delta_values = delta_values.clip(lower=0)
+    bottom_row = pd.DataFrame(data=np.array([np.zeros(100)]), index= ['Interaction'], columns=list(delta_values.columns.values))
+    top_row = pd.DataFrame(data=np.array([globalmin]), index= ['Min'], columns=list(delta_values.columns.values))
+    delta_values = pd.concat([top_row,delta_values.loc[:],bottom_row])
+    for p in percentiles:
+        total = np.sum(delta_values[str(p)])-delta_values.at['Min',str(p)]
+        if total!=0:
+            for param in param_names:
+                    value = (globalmax[p]-globalmin[p])*delta_values.at[param,str(p)]/total
+                    delta_values.set_value(param,str(p),value)
+    delta_values = delta_values.round(decimals = 2)
+    delta_values_to_plot = delta_values.values.tolist()
+    
+    S1_values = pd.read_csv('./Colorado_global_experiment/Magnitude_Sensitivity_analysis/'+ structure_name + '_S1.csv')
+    S1_values.set_index(list(S1_values)[0],inplace=True)
+    S1_values = S1_values.clip(lower=0)
+    bottom_row = pd.DataFrame(data=np.array([np.zeros(100)]), index= ['Interaction'], columns=list(S1_values.columns.values))
+    top_row = pd.DataFrame(data=np.array([globalmin]), index= ['Min'], columns=list(S1_values.columns.values))
+    S1_values = pd.concat([top_row,S1_values.loc[:],bottom_row])
+    for p in percentiles:
+        total = np.sum(S1_values[str(p)])-S1_values.at['Min',str(p)]
+        if total!=0:
+            diff = 1-total
+            S1_values.set_value('Interaction',str(p),diff)
+            for param in param_names+['Interaction']:
+                value = (globalmax[p]-globalmin[p])*S1_values.at[param,str(p)]
+                S1_values.set_value(param,str(p),value)                
+    S1_values = S1_values.round(decimals = 2)
+    S1_values_to_plot = S1_values.values.tolist()
+
+    R2_values = pd.read_csv('./Colorado_global_experiment/Magnitude_Sensitivity_analysis/'+ structure_name + '_R2.csv')
+    R2_values.set_index(list(R2_values)[0],inplace=True)
+    R2_values = R2_values.clip(lower=0)
+    bottom_row = pd.DataFrame(data=np.array([np.zeros(100)]), index= ['Interaction'], columns=list(R2_values.columns.values))
+    top_row = pd.DataFrame(data=np.array([globalmin]), index= ['Min'], columns=list(R2_values.columns.values))
+    R2_values = pd.concat([top_row,R2_values.loc[:],bottom_row])
+    for p in percentiles:
+        total = np.sum(R2_values[str(p)])-R2_values.at['Min',str(p)]
+        if total!=0:
+            diff = 1-total
+            R2_values.set_value('Interaction',str(p),diff)
+            for param in param_names+['Interaction']:
+                value = (globalmax[p]-globalmin[p])*R2_values.at[param,str(percentiles[p])]
+                R2_values.set_value(param,str(percentiles[p]),value)
+    R2_values = R2_values.round(decimals = 2)
+    R2_values_to_plot = R2_values.values.tolist()
+    
+    color_list = ["white", "#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#F77632"]     
+    
+    fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize=(14.5,8))
+    ax1.stackplot(np.arange(0,100), delta_values_to_plot, colors = color_list, labels=parameter_names_long)
+    ax1.plot(percentiles, globalmax, color='black', linewidth=2)
+    ax1.plot(percentiles, globalmin, color='black', linewidth=2)
+    ax1.set_title("Delta index")
+    ax1.set_ylim(0,ylimit)
+    ax1.set_xlim(0,100)
+    ax2.stackplot(np.arange(0,100), S1_values_to_plot, colors = color_list, labels=parameter_names_long)
+    ax2.plot(percentiles, globalmax, color='black', linewidth=2)
+    ax2.plot(percentiles, globalmin, color='black', linewidth=2)
+    ax2.set_title("S1")
+    ax2.set_ylim(0,ylimit)
+    ax2.set_xlim(0,100)
+    ax3.stackplot(np.arange(0,100), R2_values_to_plot, colors = color_list, labels=parameter_names_long)
+    ax3.plot(percentiles, globalmax, color='black', linewidth=2)
+    ax3.plot(percentiles, globalmin, color='black', linewidth=2)
+    ax3.set_title("R^2")
+    ax3.set_ylim(0,ylimit)
+    ax3.set_xlim(0,100)
+    handles, labels = ax3.get_legend_handles_labels()
+    ax1.set_ylabel('Annual shortage (af)', fontsize=12)
+    ax2.set_xlabel('Shortage magnitude percentile', fontsize=12)
+    fig.legend(handles[1:], labels[1:], fontsize=10, loc='lower center',ncol = 5)
+    plt.subplots_adjust(bottom=0.2)
+    fig.suptitle('Shortage magnitude sensitivity for '+ structure_name, fontsize=16)
+    if not os.path.exists('./ShortageSensitivityCurves/'):
+        os.makedirs('./ShortageSensitivityCurves/')
+    fig.savefig('./ShortageSensitivityCurves/' + structure_name + '.svg')
+    fig.savefig('./ShortageSensitivityCurves/' + structure_name + '.png')
+
+# Begin parallel simulation
+comm = MPI.COMM_WORLD
+
+# Get the number of processors and the rank of processors
+rank = comm.rank
+nprocs = comm.size
+
+# Determine the chunk which each processor will neeed to do
+count = int(math.floor(nStructures/nprocs))
+remainder = nStructures % nprocs
+
+# Use the processor rank to determine the chunk of work each processor will do
+if rank < remainder:
+	start = rank*(count+1)
+	stop = start + count + 1
+else:
+	start = remainder*(count+1) + (rank-remainder)*count
+	stop = start + count
+
+for i in range(start, stop):
     if all_IDs[i] in WDs:
-        histData = np.zeros(1260)
-        synthetic = np.zeros([len(histData),samples])
+        histData = np.zeros(105*12) #105 years x 12 months
+        synthetic = np.zeros([len(histData),samples, realizations])
         for ID in irrigation_structures[WDs.index(all_IDs[i])]:
             histData += np.loadtxt('./Colorado_global_experiment/Infofiles/' +  ID + '/' + ID + '_info_0.txt')[:,2]
             for j in range(samples):
-                data= np.loadtxt('./Colorado_global_experiment/Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '.txt')[:,2]     
-                synthetic[:,j]+=data
+                for r in range(realizations):
+                    data= np.loadtxt('./Colorado_global_experiment/Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
+                synthetic[:,j,r]+=data
     else:
         histData = np.loadtxt('./Colorado_global_experiment/Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]
-        synthetic = np.zeros([len(histData),samples])
+        synthetic = np.zeros([len(histData),samples, realizations])
         for j in range(samples):
-                data= np.loadtxt('./Colorado_global_experiment/Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_' + str(j+1) + '.txt')[:,2]     
-                synthetic[:,j]=data
+            for r in range(realizations):
+                data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
+                synthetic[:,j,r]=data
+    # Reshape into timeseries x all experiments
+    synthetic = np.reshape(synthetic, (len(histData), samples*realizations))
     plotSDC(synthetic, histData, all_IDs[i])
 
     
