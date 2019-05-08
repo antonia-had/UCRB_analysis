@@ -16,7 +16,7 @@ WDs = ['36','37','38','39','45','50','51','52','53','70','72']
 #for i in range(len(WDs)):
 #    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
 #irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
-all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
+all_IDs = np.genfromtxt('./metrics_structures_short.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
 nStructures = 1 #len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
