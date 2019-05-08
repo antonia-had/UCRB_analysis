@@ -2,20 +2,22 @@ import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.patches
+from scipy import stats
+import pandas as pd
 import itertools
+import os
 from mpi4py import MPI
 import math
 plt.ioff()
 
 WDs = ['36','37','38','39','45','50','51','52','53','70','72']
-non_irrigation_structures = np.genfromtxt('non_irrigation.txt',dtype='str').tolist() #list IDs of structures of interest
-irrigation_structures = [[]]*len(WDs) 
-for i in range(len(WDs)):
-    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
-irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
-all_IDs = irrigation_structures_flat+WDs+non_irrigation_structures
-IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() 
-nStructures = len(IDs) #len(all_IDs)
+#non_irrigation_structures = np.genfromtxt('non_irrigation.txt',dtype='str').tolist() #list IDs of structures of interest
+#irrigation_structures = [[]]*len(WDs) 
+#for i in range(len(WDs)):
+#    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
+#irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
+all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
+nStructures = 1 #len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
                         'TBD demand multiplier', 'M&I demand multiplier', 
@@ -30,6 +32,13 @@ param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
 percentiles = np.arange(0,100)
 samples = 1000
 realizations = 10
+
+if not os.path.exists('./MultiyearShortageCurves/'):
+    os.makedirs('./MultiyearShortageCurves/')
+if not os.path.exists('./ShortagePercentileCurves/'):
+        os.makedirs('./ShortagePercentileCurves/')
+if not os.path.exists('./ShortageSensitivityCurves/'):
+        os.makedirs('./ShortageSensitivityCurves/')
 
 def alpha(i, base=0.2):
     l = lambda x: x+base-x*base
@@ -61,6 +70,7 @@ def plotSDC(synthetic, histData, structure_name):
     #Reshape to annual totals
     synthetic_global_totals = np.sum(synthetic_global,1) 
     multi_year_durations = [[]]*samples
+    
     # Count consecutive years of shortage
     for i in range(samples):
         multi_year_durations[i] = shortage_duration(synthetic_global_totals[:,i])
@@ -135,8 +145,6 @@ def plotSDC(synthetic, histData, structure_name):
 
     fig.suptitle('Shortage magnitudes for ' + structure_name, fontsize=16)
     plt.subplots_adjust(bottom=0.2)
-    if not os.path.exists('./ShortagePercentileCurves/'):
-        os.makedirs('./ShortagePercentileCurves/')
     fig.savefig('./ShortagePercentileCurves/' + structure_name + '.svg')
     fig.savefig('./ShortagePercentileCurves/' + structure_name + '.png')
     fig.clf()
@@ -147,7 +155,7 @@ def plotSDC(synthetic, histData, structure_name):
     globalmax = [np.percentile(np.max(F_syn[:,:],1),p) for p in percentiles]
     globalmin = [np.percentile(np.min(F_syn[:,:],1),p) for p in percentiles]
     
-    delta_values = pd.read_csv('./Colorado_global_experiment/Magnitude_Sensitivity_analysis/'+ structure_name + '_DELTA.csv')
+    delta_values = pd.read_csv('./Magnitude_Sensitivity_analysis/'+ structure_name + '_DELTA.csv')
     delta_values.set_index(list(delta_values)[0],inplace=True)
     delta_values = delta_values.clip(lower=0)
     bottom_row = pd.DataFrame(data=np.array([np.zeros(100)]), index= ['Interaction'], columns=list(delta_values.columns.values))
@@ -162,7 +170,7 @@ def plotSDC(synthetic, histData, structure_name):
     delta_values = delta_values.round(decimals = 2)
     delta_values_to_plot = delta_values.values.tolist()
     
-    S1_values = pd.read_csv('./Colorado_global_experiment/Magnitude_Sensitivity_analysis/'+ structure_name + '_S1.csv')
+    S1_values = pd.read_csv('./Magnitude_Sensitivity_analysis/'+ structure_name + '_S1.csv')
     S1_values.set_index(list(S1_values)[0],inplace=True)
     S1_values = S1_values.clip(lower=0)
     bottom_row = pd.DataFrame(data=np.array([np.zeros(100)]), index= ['Interaction'], columns=list(S1_values.columns.values))
@@ -179,7 +187,7 @@ def plotSDC(synthetic, histData, structure_name):
     S1_values = S1_values.round(decimals = 2)
     S1_values_to_plot = S1_values.values.tolist()
 
-    R2_values = pd.read_csv('./Colorado_global_experiment/Magnitude_Sensitivity_analysis/'+ structure_name + '_R2.csv')
+    R2_values = pd.read_csv('./Magnitude_Sensitivity_analysis/'+ structure_name + '_R2.csv')
     R2_values.set_index(list(R2_values)[0],inplace=True)
     R2_values = R2_values.clip(lower=0)
     bottom_row = pd.DataFrame(data=np.array([np.zeros(100)]), index= ['Interaction'], columns=list(R2_values.columns.values))
@@ -223,10 +231,30 @@ def plotSDC(synthetic, histData, structure_name):
     fig.legend(handles[1:], labels[1:], fontsize=10, loc='lower center',ncol = 5)
     plt.subplots_adjust(bottom=0.2)
     fig.suptitle('Shortage magnitude sensitivity for '+ structure_name, fontsize=16)
-    if not os.path.exists('./ShortageSensitivityCurves/'):
-        os.makedirs('./ShortageSensitivityCurves/')
     fig.savefig('./ShortageSensitivityCurves/' + structure_name + '.svg')
     fig.savefig('./ShortageSensitivityCurves/' + structure_name + '.png')
+
+def getinfo(ID):
+    line_out = '' #Empty line for storing data to print in file   
+    # Get summarizing files for each structure and aspect of interest from the .xdd or .xss files
+    with open ('./Infofiles/' +  ID + '/' + ID + '_info_0.txt','w') as f:
+        try:
+            with open ('./cm2015B.xdd', 'rt') as xdd_file:
+                for line in xdd_file:
+                    data = line.split()
+                    if data:
+                        if data[0]==ID:
+                            if data[3]!='TOT':
+                                for o in [2, 4, 17]:
+                                    line_out+=(data[o]+'\t')
+                                f.write(line_out)
+                                f.write('\n')
+                                line_out = ''
+            xdd_file.close()
+            f.close()
+        except IOError:
+            f.write('999999\t999999\t999999')
+            f.close()
 
 # Begin parallel simulation
 comm = MPI.COMM_WORLD
@@ -246,23 +274,28 @@ if rank < remainder:
 else:
 	start = remainder*(count+1) + (rank-remainder)*count
 	stop = start + count
+    
+for i in range(start, stop):
+    getinfo(all_IDs[i])
+    
+comm.Barrier()
 
 for i in range(start, stop):
     if all_IDs[i] in WDs:
         histData = np.zeros(105*12) #105 years x 12 months
         synthetic = np.zeros([len(histData),samples, realizations])
         for ID in irrigation_structures[WDs.index(all_IDs[i])]:
-            histData += np.loadtxt('./Colorado_global_experiment/Infofiles/' +  ID + '/' + ID + '_info_0.txt')[:,2]
+            histData += np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_0.txt')[:,2]
             for j in range(samples):
                 for r in range(realizations):
-                    data= np.loadtxt('./Colorado_global_experiment/Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
+                    data= np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
                 synthetic[:,j,r]+=data
     else:
-        histData = np.loadtxt('./Colorado_global_experiment/Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]
+        histData = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]
         synthetic = np.zeros([len(histData),samples, realizations])
         for j in range(samples):
             for r in range(realizations):
-                data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
+                data= np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
                 synthetic[:,j,r]=data
     # Reshape into timeseries x all experiments
     synthetic = np.reshape(synthetic, (len(histData), samples*realizations))

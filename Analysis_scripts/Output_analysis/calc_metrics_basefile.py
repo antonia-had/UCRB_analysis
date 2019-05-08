@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-def getinfo(ID, info_clmn):
+def getinfo(ID):
     line_out = '' #Empty line for storing data to print in file   
     # Get summarizing files for each structure and aspect of interest from the .xdd or .xss files
     if not os.path.exists('./Infofiles/' + ID):
@@ -14,7 +14,7 @@ def getinfo(ID, info_clmn):
                     if data:
                         if data[0]==ID:
                             if data[3]!='TOT':
-                                for o in info_clmn:
+                                for o in [2, 4, 17]:
                                     line_out+=(data[o]+'\t')
                                 f.write(line_out)
                                 f.write('\n')
@@ -26,10 +26,9 @@ def getinfo(ID, info_clmn):
             f.close()
 
 
-IDs = np.genfromtxt('metrics_structures.txt',dtype='str').tolist() #list IDs of structures of interest 
-info_clmn = [2, 4, 17]
+IDs = np.genfromtxt('metrics_structures_short.txt',dtype='str').tolist() #list IDs of structures of interest 
 for ID in IDs:
-    getinfo(ID,info_clmn)
+    getinfo(ID)
     
 nsamples = 1000
 
