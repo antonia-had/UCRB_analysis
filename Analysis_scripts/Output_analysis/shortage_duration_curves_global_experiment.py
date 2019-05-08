@@ -295,7 +295,7 @@ for i in range(start, stop):
         synthetic = np.zeros([len(histData),samples, realizations])
         for j in range(samples):
             for r in range(realizations):
-                data= np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
+                data= np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
                 synthetic[:,j,r]=data
     # Reshape into timeseries x all experiments
     synthetic = np.reshape(synthetic, (len(histData), samples*realizations))
