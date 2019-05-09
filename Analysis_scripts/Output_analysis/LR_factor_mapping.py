@@ -75,7 +75,7 @@ def factor_mapping(ID):
     demands = np.zeros([nMonths,len(LHsamples[:,0]), realizations])
     for j in range(len(LHsamples[:,0])):
         for r in range(realizations):
-            data= np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,[1,2]]     
+            data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,[1,2]]     
             demands[:,j,r]=data[:,0]
             shortages[:,j,r]=data[:,1]
     # Reshape into timeseries x all experiments
@@ -93,7 +93,7 @@ def factor_mapping(ID):
     f_demands_WY = np.sum(f_demands,axis=1)
     f_shortages_WY = np.sum(f_shortages,axis=1)
     
-    if ID in irrigation_structures_flat:
+    if ID in irrigation_structures:
         fail_duration = [30, 20, 10, 5]
         fail_shortage = [40, 45, 55, 70]
     elif ID in TBDs:
