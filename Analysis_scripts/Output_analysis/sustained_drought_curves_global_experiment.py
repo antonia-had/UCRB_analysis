@@ -13,24 +13,23 @@ import math
 plt.ioff()
 samples = 1000
 WDs = ['36','37','38','39','45','50','51','52','53','70','72']
-WD_names = ['Blue River','Eagle River','Roaring Fork','Rifle/Elk/Parachute',
-            'Divide','Muddy/Troublesome','U. Colorado/Fraser',
-            'Piney/Cottonwood','N. Colorado','Roan Creek','L. Colorado']
-non_irrigation_structures = np.genfromtxt('non_irrigation.txt',dtype='str').tolist() #list IDs of structures of interest
-irrigation_structures = [[]]*len(WDs) 
-for i in range(len(WDs)):
-    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
-irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
-all_IDs = non_irrigation_structures+WDs+irrigation_structures_flat
+#non_irrigation_structures = np.genfromtxt('non_irrigation.txt',dtype='str').tolist() #list IDs of structures of interest
+#irrigation_structures = [[]]*len(WDs) 
+#for i in range(len(WDs)):
+#    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
+#irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
+all_IDs = np.genfromtxt('./metrics_structures_short.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
 nStructures = len(all_IDs)
-parameter_names_long = ['Wet-to-wet state prob.', 'Dry-to-dry state prob.',
-                   'Wet state sigma', 'Wet state mu', 'Dry state sigma',
-                   'Dry state mu', 'Evaporation delta', 'Env. flow senior right',
-                   'Shoshone active', 'M&I demand multiplier', 
-                   'TBD demand multiplier', 'Reservoir loss', 'IWR demand mutliplier']
+parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
+                        'TBD demand multiplier', 'M&I demand multiplier', 
+                        'Shoshone active', 'Env. flow senior right', 
+                        'Evaporation delta', 'Dry state mu', 
+                        'Dry state sigma', 'Wet state mu', 
+                        'Wet state sigma', 'Dry-to-dry state prob.', 
+                        'Wet-to-wet state prob.', 'Earlier snowmelt', 'Interaction']
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
-             'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
-             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11']
+             'ShoshoneDMND','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
+             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
 percentiles = np.arange(0,100)
 #Experiment directories
 experiments = ['Colorado_global_experiment','Colorado_streamflow_experiment']
