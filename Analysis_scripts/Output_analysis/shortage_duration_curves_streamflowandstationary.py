@@ -4,7 +4,6 @@ from matplotlib import pyplot as plt
 plt.switch_backend('agg')
 import matplotlib.patches
 from scipy import stats
-import pandas as pd
 import itertools
 import os
 from mpi4py import MPI
@@ -17,7 +16,7 @@ WDs = ['36','37','38','39','45','50','51','52','53','70','72']
 #for i in range(len(WDs)):
 #    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
 #irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
-all_IDs = np.genfromtxt('./metrics_structures_short.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
+all_IDs = np.genfromtxt('./metrics_structures.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
 nStructures = len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 

@@ -6,16 +6,13 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt 
 plt.ioff()
 
-LHsamples = np.loadtxt('./LHsamples.txt') 
-param_bounds=np.loadtxt('./uncertain_params.txt', usecols=(1,2))
-SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0]) #Default parameter values for base SOW
+LHsamples = np.loadtxt('./Global_experiment_uncurtailed/LHsamples.txt') 
+param_bounds=np.loadtxt('./Global_experiment_uncurtailed/uncertain_params.txt', usecols=(1,2))
+SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values for base SOW
 params_no = len(LHsamples[0,:])
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
-             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11']
-parameter_ranges = [[0.5, 1.5],[0.8, 1.0],[0.5, 1.5],[0.5, 1.5],[0.0, 1.0],
-                    [0.0, 1.0],[-0.5, 1.0],[0.98, 1.02],[0.75, 1.25],
-                    [0.98, 1.02],[0.75, 1.25],[-0.3, 0.3],[-0.3, 0.3]]
+             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
 problem = {
     'num_vars': params_no,
     'names': param_names,
@@ -127,9 +124,9 @@ def sensitivity_analysis_per_structure(ID):
      
     # define grid of x (1st predictor), and y (2nd predictor) dimensions
     # to plot contour map over
-    xgrid = np.arange(parameter_ranges[top_predictors[0]][0], parameter_ranges[top_predictors[0]][1], 0.01)
-    ygrid = np.arange(parameter_ranges[top_predictors[1]][0], parameter_ranges[top_predictors[1]][1], 0.01)
-    zgrid = np.arange(parameter_ranges[top_predictors[2]][0], parameter_ranges[top_predictors[2]][1], 0.01)
+    xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], 0.01)
+    ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], 0.01)
+    zgrid = np.arange(param_bounds[top_predictors[2]][0], param_bounds[top_predictors[2]][1], 0.01)
     all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
     
     #Axes 0
