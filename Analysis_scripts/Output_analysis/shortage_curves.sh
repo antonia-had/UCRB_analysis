@@ -9,4 +9,5 @@
 
 module load python
 module load mpi4py
+module load scipy
 ibrun python shortage_duration_curves_global_experiment.py

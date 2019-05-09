@@ -18,7 +18,7 @@ WDs = ['36','37','38','39','45','50','51','52','53','70','72']
 #    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
 #irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
 all_IDs = np.genfromtxt('./metrics_structures_short.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
-nStructures = 1 #len(all_IDs)
+nStructures = len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
                         'TBD demand multiplier', 'M&I demand multiplier', 
@@ -26,7 +26,7 @@ parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss',
                         'Evaporation delta', 'Dry state mu', 
                         'Dry state sigma', 'Wet state mu', 
                         'Wet state sigma', 'Dry-to-dry state prob.', 
-                        'Wet-to-wet state prob.', 'Interaction', 'Earlier snowmelt']
+                        'Wet-to-wet state prob.', 'Earlier snowmelt', 'Interaction']
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'ShoshoneDMND','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
@@ -208,24 +208,24 @@ def plotSDC(synthetic, histData, structure_name):
         R2_values[column] = R2_values[column].round(decimals = 2)
     R2_values_to_plot = R2_values.values.tolist()
     
-    color_list = ["white", "#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#F77632"]     
+    color_list = ["white", "#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#32B3F7","#F77632"]     
     
     fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize=(14.5,8))
     ax1.stackplot(np.arange(0,100), delta_values_to_plot, colors = color_list)
-    ax1.plot(percentiles, globalmax, color='black', linewidth=2)
-    ax1.plot(percentiles, globalmin, color='black', linewidth=2)
+    ax1.plot(percentiles, globalmax, color='black', linewidth=1)
+    ax1.plot(percentiles, globalmin, color='black', linewidth=1)
     ax1.set_title("Delta index")
     ax1.set_ylim(0,ylimit)
     ax1.set_xlim(0,100)
     ax2.stackplot(np.arange(0,100), S1_values_to_plot, colors = color_list)
-    ax2.plot(percentiles, globalmax, color='black', linewidth=2)
-    ax2.plot(percentiles, globalmin, color='black', linewidth=2)
+    ax2.plot(percentiles, globalmax, color='black', linewidth=1)
+    ax2.plot(percentiles, globalmin, color='black', linewidth=1)
     ax2.set_title("S1")
     ax2.set_ylim(0,ylimit)
     ax2.set_xlim(0,100)
     ax3.stackplot(np.arange(0,100), R2_values_to_plot, colors = color_list)
-    ax3.plot(percentiles, globalmax, color='black', linewidth=2)
-    ax3.plot(percentiles, globalmin, color='black', linewidth=2)
+    ax3.plot(percentiles, globalmax, color='black', linewidth=1)
+    ax3.plot(percentiles, globalmin, color='black', linewidth=1)
     ax3.set_title("R^2")
     ax3.set_ylim(0,ylimit)
     ax3.set_xlim(0,100)
