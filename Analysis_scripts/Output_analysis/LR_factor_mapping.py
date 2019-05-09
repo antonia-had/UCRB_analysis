@@ -18,13 +18,8 @@ param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
 
-WDs = ['36','37','38','39','45','50','51','52','53','70','72'] 
 
-irrigation_structures = [[]]*len(WDs) 
-for i in range(len(WDs)):
-    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
-
-irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
+irrigation_structures = np.genfromtxt('./Global_experiment_uncurtailed/irrigation.txt',dtype='str').tolist()
 TBDs = np.genfromtxt('./Global_experiment_uncurtailed/TBD.txt',dtype='str').tolist()
 all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures.txt',dtype='str').tolist()
 nStructures = len(all_IDs)
