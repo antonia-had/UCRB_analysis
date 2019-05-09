@@ -5,7 +5,6 @@ plt.switch_backend('agg')
 import matplotlib.patches
 from scipy import stats
 import itertools
-import os
 from mpi4py import MPI
 import math
 plt.ioff()
@@ -33,14 +32,15 @@ percentiles = np.arange(0,100)
 samples = 1000
 realizations = 10
 
-if not os.path.exists('./MultiyearShortageCurves_streamflow/'):
-    os.makedirs('./MultiyearShortageCurves_streamflow/')
-if not os.path.exists('./ShortagePercentileCurves_streamflow/'):
-    os.makedirs('./ShortagePercentileCurves_streamflow/')
-if not os.path.exists('./MultiyearShortageCurves_stationary/'):
-    os.makedirs('./MultiyearShortageCurves_stationary/')
-if not os.path.exists('./ShortagePercentileCurves_stationary/'):
-    os.makedirs('./ShortagePercentileCurves_stationary/')
+#No need to check if already there
+#if not os.path.exists('./MultiyearShortageCurves_streamflow/'):
+#    os.makedirs('./MultiyearShortageCurves_streamflow/')
+#if not os.path.exists('./ShortagePercentileCurves_streamflow/'):
+#    os.makedirs('./ShortagePercentileCurves_streamflow/')
+#if not os.path.exists('./MultiyearShortageCurves_stationary/'):
+#    os.makedirs('./MultiyearShortageCurves_stationary/')
+#if not os.path.exists('./ShortagePercentileCurves_stationary/'):
+#    os.makedirs('./ShortagePercentileCurves_stationary/')
 
 def alpha(i, base=0.2):
     l = lambda x: x+base-x*base
@@ -199,7 +199,7 @@ else:
 #for i in range(start, stop):
 #    getinfo(all_IDs[i])
     
-comm.Barrier()
+#comm.Barrier()
 
 for i in range(start, stop):
     for experiment in ['streamflow', 'stationary']:
@@ -212,15 +212,23 @@ for i in range(start, stop):
                     for r in range(realizations):
                         data= np.loadtxt('./Infofiles_'+experiment+'/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
                     synthetic[:,j,r]+=data
+            # Reshape into timeseries x all experiments
+            synthetic = np.reshape(synthetic, (len(histData), samples*realizations))
         else:
             histData = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]
-            synthetic = np.zeros([len(histData),samples, realizations])
-            for j in range(samples):
+            if experiment == 'streamflow':
+                synthetic = np.zeros([len(histData),samples, realizations])
+                for j in range(samples):
+                    for r in range(realizations):
+                        data= np.loadtxt('./Infofiles_'+experiment+'/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
+                        synthetic[:,j,r]=data
+                # Reshape into timeseries x all experiments
+                synthetic = np.reshape(synthetic, (len(histData), samples*realizations))
+            if experiment == 'stationary':
+                synthetic = np.zeros([len(histData), realizations])
                 for r in range(realizations):
-                    data= np.loadtxt('./Infofiles_'+experiment+'/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
-                    synthetic[:,j,r]=data
-        # Reshape into timeseries x all experiments
-        synthetic = np.reshape(synthetic, (len(histData), samples*realizations))
+                    data= np.loadtxt('./Infofiles_'+experiment+'/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0_' + str(r+1) + '.txt')[:,2]     
+                    synthetic[:,r]=data            
         plotSDC(synthetic, histData, all_IDs[i], experiment)
 
     
