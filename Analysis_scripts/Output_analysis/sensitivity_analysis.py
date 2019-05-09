@@ -5,8 +5,8 @@ import scipy.stats
 import matplotlib.pyplot as plt
 from SALib.analyze import delta
 import itertools
-#from mpi4py import MPI
-#import math
+from mpi4py import MPI
+import math
 plt.ioff()
 
 LHsamples = np.loadtxt('./Global_experiment_uncurtailed/LHsamples.txt')
@@ -32,8 +32,8 @@ problem = {
 percentiles = np.arange(0,100)
 #
 #all_IDs = non_irrigation_structures+WDs+irrigation_structures_flat
-IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() 
-nStructures = 1#len(IDs) #len(all_IDs)
+all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures_short.txt',dtype='str').tolist() 
+nStructures = len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
 # calls scipy.stats.chisqprob, which no longer exists
