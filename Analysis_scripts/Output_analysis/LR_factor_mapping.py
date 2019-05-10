@@ -4,6 +4,7 @@ import statsmodels.api as sm
 import scipy.stats
 import matplotlib as mpl
 import matplotlib.pyplot as plt 
+plt.switch_backend('agg')
 import itertools
 from mpi4py import MPI
 import math
