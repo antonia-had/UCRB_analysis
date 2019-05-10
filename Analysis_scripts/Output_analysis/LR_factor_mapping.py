@@ -83,9 +83,9 @@ def factor_mapping(ID):
     shortages = np.reshape(shortages, (nMonths, len(LHsamples[:,0])*realizations))
     #Reshape into water years
     #Create matrix of [no. years x no. months x no. experiments]
-    f_shortages = np.zeros([int(nMonths/n),n,len(LHsamples[:,0])])
-    f_demands = np.zeros([int(nMonths/n),n,len(LHsamples[:,0])]) 
-    for i in range(len(LHsamples[:,0])):
+    f_shortages = np.zeros([int(nMonths/n),n,len(LHsamples[:,0])*realizations])
+    f_demands = np.zeros([int(nMonths/n),n,len(LHsamples[:,0])*realizations]) 
+    for i in range(len(LHsamples[:,0])*realizations):
         f_shortages[:,:,i]= np.reshape(shortages[:,i], (int(np.size(shortages[:,i])/n), n))
         f_demands[:,:,i]= np.reshape(demands[:,i], (int(np.size(demands[:,i])/n), n))
     
