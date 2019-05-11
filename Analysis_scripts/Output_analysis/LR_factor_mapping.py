@@ -122,7 +122,7 @@ def factor_mapping(ID):
                     pseudo_r_scores[m]=result.prsquared
                 except: 
                     pseudo_r_scores[m]=pseudo_r_scores[m]
-            #pseudo_r_scores.to_csv('./Factor_mapping/'+ ID + '_pseudo_R2.csv')
+            pseudo_r_scores.to_csv('./Global_experiment_uncurtailed/Factor_mapping/'+ ID + '_pseudo_R2.csv')
             fig, axes = plt.subplots(1,3)
             axes = axes.ravel()
             top_predictors = np.argsort(pseudo_r_scores)[::-1][:3] #Sort scores and pick top 3 predictors
@@ -194,7 +194,7 @@ def factor_mapping(ID):
                     pseudo_r_scores[m]=result.prsquared
                 except: 
                     pseudo_r_scores[m]=pseudo_r_scores[m]
-            #pseudo_r_scores.to_csv('./Factor_mapping/'+ ID + '_pseudo_R2.csv')
+            pseudo_r_scores.to_csv('./Global_experiment_uncurtailed/Factor_mapping/'+ ID + '_pseudo_R2.csv')
             fig, axes = plt.subplots(1,3)
             axes = axes.ravel()
             top_predictors = np.argsort(pseudo_r_scores)[::-1][:3] #Sort scores and pick top 3 predictors
