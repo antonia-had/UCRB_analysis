@@ -4,11 +4,11 @@ import statsmodels.api as sm
 import scipy.stats
 import matplotlib as mpl
 import matplotlib.pyplot as plt 
-#plt.switch_backend('agg')
+plt.switch_backend('agg')
 import itertools
-#from mpi4py import MPI
-#import math
-#plt.ioff()
+from mpi4py import MPI
+import math
+plt.ioff()
 
 LHsamples = np.loadtxt('./Global_experiment_uncurtailed/LHsamples.txt') 
 realizations = 10
@@ -256,25 +256,25 @@ def factor_mapping(ID):
                     plt.close()
 
     
-## Begin parallel simulation
-#comm = MPI.COMM_WORLD
-#
-## Get the number of processors and the rank of processors
-#rank = comm.rank
-#nprocs = comm.size
-#
-## Determine the chunk which each processor will neeed to do
-#count = int(math.floor(nStructures/nprocs))
-#remainder = nStructures % nprocs
-#
-## Use the processor rank to determine the chunk of work each processor will do
-#if rank < remainder:
-#	start = rank*(count+1)
-#	stop = start + count + 1
-#else:
-#	start = remainder*(count+1) + (rank-remainder)*count
-#	stop = start + count
+# Begin parallel simulation
+comm = MPI.COMM_WORLD
+
+# Get the number of processors and the rank of processors
+rank = comm.rank
+nprocs = comm.size
+
+# Determine the chunk which each processor will neeed to do
+count = int(math.floor(nStructures/nprocs))
+remainder = nStructures % nprocs
+
+# Use the processor rank to determine the chunk of work each processor will do
+if rank < remainder:
+	start = rank*(count+1)
+	stop = start + count + 1
+else:
+	start = remainder*(count+1) + (rank-remainder)*count
+	stop = start + count
     
 # Run simulation
-for i in range(1):#start, stop):
+for i in range(start, stop):
     factor_mapping(all_IDs[i])

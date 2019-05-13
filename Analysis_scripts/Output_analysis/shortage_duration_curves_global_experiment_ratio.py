@@ -6,8 +6,8 @@ import matplotlib.patches
 from scipy import stats
 import itertools
 import os
-#from mpi4py import MPI
-#import math
+from mpi4py import MPI
+import math
 plt.ioff()
 
 WDs = ['36','37','38','39','45','50','51','52','53','70','72']
@@ -16,7 +16,7 @@ WDs = ['36','37','38','39','45','50','51','52','53','70','72']
 #for i in range(len(WDs)):
 #    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
 #irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
-all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
+all_IDs = np.genfromtxt('./TBD.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
 nStructures = len(all_IDs)
 p = np.arange(0,100)
 samples = 1000
@@ -37,15 +37,19 @@ def shortage_duration(sequence):
     shrt_dur = [ sum( 1 for _ in group ) for key, group in itertools.groupby( cnt_shrt ) if key ] # Counts groups of True values
     return shrt_dur
   
-def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_demand, structure_name):
+def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_demand,uncurt_shortage, uncurt_demand, structure_name):
     n = 12
     #Reshape historic data to a [no. years x no. months] matrix
     f_hist_d = np.reshape(histData_demand, (int(np.size(histData_demand)/n), n))
     f_hist_s = np.reshape(histData_shortage, (int(np.size(histData_shortage)/n), n))
+    f_uncurt_d = np.reshape(uncurt_demand, (int(np.size(uncurt_demand)/n), n))
+    f_uncurt_s = np.reshape(uncurt_shortage, (int(np.size(uncurt_shortage)/n), n))
     #Reshape to annual totals
     f_hist_totals_ratio = np.sum(f_hist_s,1)/np.sum(f_hist_d,1)
+    f_uncurt_totals_ratio = np.sum(f_uncurt_s,1)/np.sum(f_uncurt_d,1)
     #Calculate historical shortage duration curves
     F_hist = np.sort(f_hist_totals_ratio) # for inverse sorting add this at the end [::-1]
+    F_uncurt = np.sort(f_uncurt_totals_ratio)
     
     #Reshape synthetic data
     #Create matrix of [no. years x no. months x no. samples]
@@ -125,9 +129,11 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
         label = "{:.0f} %".format(100-p[i])
         labels.append(label)
     ax1.plot(P,F_hist, c='black', linewidth=2, label='Historical record')
+    ax1.plot(P,F_uncurt, c='black', linewidth=2, linestyle = '-', label='Historical record (uncurtailed)')
     ax1.set_ylim(0,ylimit)
     ax1.set_xlim(0,100)
-    ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
+    #ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
+    ax1.legend(fontsize=8, loc='upper left')
     ax1.set_xlabel('Shortage ratio percentile', fontsize=12)
     ax1.set_ylabel('Ration of annual shortage to annual demand', fontsize=12)
 
@@ -137,27 +143,53 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
     fig.savefig('./RatioShortageCurves/' + structure_name + '.png')
     fig.clf()
     
+def getinfo(ID):
+    line_out = '' #Empty line for storing data to print in file   
+    # Get summarizing files for each structure and aspect of interest from the .xdd or .xss files
+    with open ('./Infofiles/' +  ID + '/' + ID + '_info_0_uncurtailed.txt','w') as f:
+        try:
+            with open ('./cm2015B_uncurtailed.xdd', 'rt') as xdd_file:
+                for line in xdd_file:
+                    data = line.split()
+                    if data:
+                        if data[0]==ID:
+                            if data[3]!='TOT':
+                                for o in [2, 4, 17]:
+                                    line_out+=(data[o]+'\t')
+                                f.write(line_out)
+                                f.write('\n')
+                                line_out = ''
+            xdd_file.close()
+            f.close()
+        except IOError:
+            f.write('999999\t999999\t999999')
+            f.close()
 
-## Begin parallel simulation
-#comm = MPI.COMM_WORLD
-#
-## Get the number of processors and the rank of processors
-#rank = comm.rank
-#nprocs = comm.size
-#
-## Determine the chunk which each processor will neeed to do
-#count = int(math.floor(nStructures/nprocs))
-#remainder = nStructures % nprocs
-#
-## Use the processor rank to determine the chunk of work each processor will do
-#if rank < remainder:
-#	start = rank*(count+1)
-#	stop = start + count + 1
-#else:
-#	start = remainder*(count+1) + (rank-remainder)*count
-#	stop = start + count
+# Begin parallel simulation
+comm = MPI.COMM_WORLD
 
-for i in range(1):#start, stop):
+# Get the number of processors and the rank of processors
+rank = comm.rank
+nprocs = comm.size
+
+# Determine the chunk which each processor will neeed to do
+count = int(math.floor(nStructures/nprocs))
+remainder = nStructures % nprocs
+
+# Use the processor rank to determine the chunk of work each processor will do
+if rank < remainder:
+	start = rank*(count+1)
+	stop = start + count + 1
+else:
+	start = remainder*(count+1) + (rank-remainder)*count
+	stop = start + count
+    
+for i in range(start, stop):
+    getinfo(all_IDs[i])
+    
+comm.Barrier()
+
+for i in range(start, stop):
     if all_IDs[i] in WDs:
         histData_shortage = np.zeros(105*12) #105 years x 12 months
         histData_demand = np.zeros(105*12)
@@ -175,6 +207,8 @@ for i in range(1):#start, stop):
     else:
         histData_shortage = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]
         histData_demand = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,1]
+        uncurt_shortage = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0_uncurtailed.txt')[:,2]
+        uncurt_demand = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0_uncurtailed.txt')[:,1]
         synthetic_shortage = np.zeros([len(histData_shortage),samples, realizations])
         synthetic_demand = np.zeros([len(histData_shortage),samples, realizations])
         for j in range(samples):
@@ -186,6 +220,6 @@ for i in range(1):#start, stop):
     # Reshape into timeseries x all experiments
     synthetic_shortage = np.reshape(synthetic_shortage, (len(histData_shortage), samples*realizations))
     synthetic_demand = np.reshape(synthetic_demand, (len(histData_shortage), samples*realizations))
-    plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_demand, all_IDs[i])
+    plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_demand, uncurt_shortage, uncurt_demand, all_IDs[i])
 
     

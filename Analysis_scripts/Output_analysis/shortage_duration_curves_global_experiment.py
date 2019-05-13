@@ -282,8 +282,6 @@ else:
 for i in range(start, stop):
     getinfo(all_IDs[i])
     
-comm.Barrier()
-
 for i in range(start, stop):
     if all_IDs[i] in WDs:
         histData = np.zeros(105*12) #105 years x 12 months
