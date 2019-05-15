@@ -17,8 +17,8 @@ WDs = ['36','37','38','39','45','50','51','52','53','70','72']
 #for i in range(len(WDs)):
 #    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
 #irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
-all_IDs = np.genfromtxt('./metrics_structures_short.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
-nStructures = len(all_IDs)
+all_IDs = np.genfromtxt('./metrics_structures.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
+nStructures = 15#len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
                         'TBD demand multiplier', 'M&I demand multiplier', 
@@ -34,12 +34,12 @@ percentiles = np.arange(0,100)
 samples = 1000
 realizations = 10
 
-if not os.path.exists('./MultiyearShortageCurves/'):
-    os.makedirs('./MultiyearShortageCurves/')
-if not os.path.exists('./ShortagePercentileCurves/'):
-        os.makedirs('./ShortagePercentileCurves/')
-if not os.path.exists('./ShortageSensitivityCurves/'):
-        os.makedirs('./ShortageSensitivityCurves/')
+#if not os.path.exists('./MultiyearShortageCurves/'):
+#    os.makedirs('./MultiyearShortageCurves/')
+#if not os.path.exists('./ShortagePercentileCurves/'):
+#        os.makedirs('./ShortagePercentileCurves/')
+#if not os.path.exists('./ShortageSensitivityCurves/'):
+#        os.makedirs('./ShortageSensitivityCurves/')
 
 def alpha(i, base=0.2):
     l = lambda x: x+base-x*base
@@ -77,7 +77,7 @@ def plotSDC(synthetic, histData, structure_name):
         multi_year_durations[i] = shortage_duration(synthetic_global_totals[:,i])
     hist_durations = shortage_duration(f_hist_totals)
     
-    p=np.arange(100,0,-10)
+    p=np.arange(100,-10,-10)
     p_i=p[::-1]
     hist_durations_percentiles = np.zeros([len(p_i)])
     multi_year_durations_percentiles = np.zeros([len(p_i),samples])
@@ -278,12 +278,10 @@ if rank < remainder:
 else:
 	start = remainder*(count+1) + (rank-remainder)*count
 	stop = start + count
+#    
+#for i in range(start, stop):
+#    getinfo(all_IDs[i])
     
-for i in range(start, stop):
-    getinfo(all_IDs[i])
-    
-comm.Barrier()
-
 for i in range(start, stop):
     if all_IDs[i] in WDs:
         histData = np.zeros(105*12) #105 years x 12 months

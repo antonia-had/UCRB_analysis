@@ -16,7 +16,7 @@ WDs = ['36','37','38','39','45','50','51','52','53','70','72']
 #for i in range(len(WDs)):
 #    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
 #irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
-all_IDs = np.genfromtxt('./metrics_structures.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
+all_IDs = np.genfromtxt('./TBD.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
 nStructures = len(all_IDs)
 percentiles = np.arange(0,100)
 samples = 1000
@@ -37,15 +37,19 @@ def shortage_duration(sequence):
     shrt_dur = [ sum( 1 for _ in group ) for key, group in itertools.groupby( cnt_shrt ) if key ] # Counts groups of True values
     return shrt_dur
   
-def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_demand, structure_name):
+def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_demand,uncurt_shortage, uncurt_demand, structure_name):
     n = 12
     #Reshape historic data to a [no. years x no. months] matrix
     f_hist_d = np.reshape(histData_demand, (int(np.size(histData_demand)/n), n))
     f_hist_s = np.reshape(histData_shortage, (int(np.size(histData_shortage)/n), n))
+    f_uncurt_d = np.reshape(uncurt_demand, (int(np.size(uncurt_demand)/n), n))
+    f_uncurt_s = np.reshape(uncurt_shortage, (int(np.size(uncurt_shortage)/n), n))
     #Reshape to annual totals
     f_hist_totals_ratio = np.sum(f_hist_s,1)/np.sum(f_hist_d,1)
+    f_uncurt_totals_ratio = np.sum(f_uncurt_s,1)/np.sum(f_uncurt_d,1)
     #Calculate historical shortage duration curves
     F_hist = np.sort(f_hist_totals_ratio) # for inverse sorting add this at the end [::-1]
+    F_uncurt = np.sort(f_uncurt_totals_ratio)
     
     #Reshape synthetic data
     #Create matrix of [no. years x no. months x no. samples]
@@ -111,7 +115,7 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
     P = np.arange(1.,len(F_hist)+1)*100 / len(F_hist)
     
     
-    ylimit = round(np.max(F_syn), -3)
+    ylimit = round(np.max(F_syn))
     fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
     # ax1
     handles = []
@@ -125,9 +129,11 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
         label = "{:.0f} %".format(100-p[i])
         labels.append(label)
     ax1.plot(P,F_hist, c='black', linewidth=2, label='Historical record')
+    ax1.plot(P,F_uncurt, c='black', linewidth=2, linestyle = '-', label='Historical record (uncurtailed)')
     ax1.set_ylim(0,ylimit)
     ax1.set_xlim(0,100)
-    ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
+    #ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
+    ax1.legend(fontsize=8, loc='upper left')
     ax1.set_xlabel('Shortage ratio percentile', fontsize=12)
     ax1.set_ylabel('Ration of annual shortage to annual demand', fontsize=12)
 
@@ -137,7 +143,6 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
     fig.savefig('./RatioShortageCurves/' + structure_name + '.png')
     fig.clf()
     
-
 # Begin parallel simulation
 comm = MPI.COMM_WORLD
 
@@ -175,6 +180,8 @@ for i in range(start, stop):
     else:
         histData_shortage = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]
         histData_demand = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,1]
+        uncurt_shortage = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0_uncurtailed.txt')[:,2]
+        uncurt_demand = np.loadtxt('./Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0_uncurtailed.txt')[:,1]
         synthetic_shortage = np.zeros([len(histData_shortage),samples, realizations])
         synthetic_demand = np.zeros([len(histData_shortage),samples, realizations])
         for j in range(samples):
@@ -186,6 +193,6 @@ for i in range(start, stop):
     # Reshape into timeseries x all experiments
     synthetic_shortage = np.reshape(synthetic_shortage, (len(histData_shortage), samples*realizations))
     synthetic_demand = np.reshape(synthetic_demand, (len(histData_shortage), samples*realizations))
-    plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_demand, all_IDs[i])
+    plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_demand, uncurt_shortage, uncurt_demand, all_IDs[i])
 
     
