@@ -94,7 +94,7 @@ def writenewDDM(structures, firstLine, sampleCol, k, l):
     new_data = []
     irrigation_encounters = np.zeros(len(structures[0]))
     # Divide Shoshone demand multiplier into on and off 
-    if LHsamples[k,4]>0.5: 
+    if LHsamples[k,sampleCol[3]]>0.5: 
         multiplier = 1
     else:
         multiplier = 0
@@ -124,16 +124,16 @@ def writenewDDM(structures, firstLine, sampleCol, k, l):
                 row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1])+change[j+1])))
         elif row_data[1] in structures[1]: #If the structure is transbasin (to uncurtail)   
             # apply multiplier to 1st month
-            row_data[2] = str(int(float(diversions_uc[uncurtailed.index(row_data[1])][1])*LHsamples[k,sampleCol[2]]))
+            row_data[2] = str(int(float(diversions_uc[uncurtailed.index(row_data[1])][1])*LHsamples[k,sampleCol[1]]))
             # apply multipliers to rest of the columns
             for j in range(1,12):
-                row_data.append(str(int(float(diversions_uc[uncurtailed.index(row_data[1])][j+1])*LHsamples[k,sampleCol[2]]))) 
+                row_data.append(str(int(float(diversions_uc[uncurtailed.index(row_data[1])][j+1])*LHsamples[k,sampleCol[1]]))) 
         elif row_data[1] in structures[2]: #If the structure is mun_ind 
             # apply multiplier to 1st month
-            row_data[2] = str(int(float(row_data[2])*LHsamples[k,sampleCol[3]]))
+            row_data[2] = str(int(float(row_data[2])*LHsamples[k,sampleCol[2]]))
             # apply multipliers to rest of the columns
             for j in range(len(all_split_data_DDM[i+firstLine])-2):
-                row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1])*LHsamples[k,sampleCol[3]])))  
+                row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1])*LHsamples[k,sampleCol[2]])))  
         elif row_data[1] not in allstructures:
             for j in range(len(all_split_data_DDM[i+firstLine])-2):
                 row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1]))))                      
