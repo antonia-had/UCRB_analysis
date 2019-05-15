@@ -18,7 +18,7 @@ WDs = ['36','37','38','39','45','50','51','52','53','70','72']
 #    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
 #irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
 all_IDs = np.genfromtxt('./metrics_structures.txt',dtype='str').tolist() #irrigation_structures_flat+WDs+non_irrigation_structures
-nStructures = 15#len(all_IDs)
+nStructures = len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
                         'TBD demand multiplier', 'M&I demand multiplier', 
@@ -233,7 +233,7 @@ def plotSDC(synthetic, histData, structure_name):
     handles, labels = ax1.get_legend_handles_labels()
     ax1.set_ylabel('Annual shortage (af)', fontsize=12)
     ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
-    fig.legend(handles[1:], labels = parameter_names_long[1:], fontsize=10, loc='lower center',ncol = 5)
+    plt.legend(handles[1:], labels = parameter_names_long[1:], fontsize=10, loc='lower center',ncol = 5)
     plt.subplots_adjust(bottom=0.2)
     fig.suptitle('Shortage magnitude sensitivity for '+ structure_name, fontsize=16)
     fig.savefig('./ShortageSensitivityCurves/' + structure_name + '_delta.svg')
