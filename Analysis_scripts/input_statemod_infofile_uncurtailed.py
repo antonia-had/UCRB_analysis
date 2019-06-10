@@ -304,4 +304,4 @@ for k in range(start, stop):
                   os.path.getsize('./Experiment_files/cm2015B_S'+str(k+1)+ '_' + str(j+1) + '.xdd') >> 10 > 502000):
             time.sleep(1)
         getinfo(k,j)
-        os.system("rm ./Experiment_files/cm2015B_S{0}_{1}.xdd".format(k+1,j+1))
+        os.system("rm ./Experiment_files/cm2015B_S{}_{}.xdd".format(k+1,j+1))
