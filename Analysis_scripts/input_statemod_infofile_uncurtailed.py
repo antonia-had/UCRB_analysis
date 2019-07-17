@@ -4,6 +4,7 @@ import numpy as np
 from string import Template
 import os
 import time
+import pandas as pd
 
 # =============================================================================
 # Experiment set up
@@ -46,10 +47,25 @@ with open('./Experiment_files/cm2015B.iwr','r') as f:
     hist_IWR = [x.split() for x in f.readlines()[463:]]       
 f.close() 
 # Get uncurtailed demands
-with open('./cm2015_export_max.stm','r') as f:
-    diversions_uc = [x.split()[1:14] for x in f.readlines()[78:94]]       
-f.close() 
-uncurtailed = [x[0] for x in diversions_uc] # Get uncurtailed structures
+#with open('./cm2015_export_max.stm','r') as f:
+#    diversions_uc = [x.split()[1:14] for x in f.readlines()[78:94]]       
+#f.close() 
+#uncurtailed = [x[0] for x in diversions_uc] # Get uncurtailed structures
+max_values = pd.DataFrame(np.zeros([6,13]),index=transbasin)
+for i in range(len(all_split_data_DDM)-779):
+    row_data = []
+    row_data.extend(all_split_data_DDM[i+779][0].split())
+    if row_data[1] in transbasin:
+        current_values = max_values.loc[row_data[1]].values
+        if float(row_data[2])>current_values[0]:
+            current_values[0] = float(row_data[2])
+        for j in range(len(all_split_data_DDM[i+779])-3):
+            if float(all_split_data_DDM[i+779][j+1])>current_values[j+1]:
+                current_values[j+1]=float(all_split_data_DDM[i+779][j+1])
+        max_values.loc[row_data[1]]=current_values
+
+for index, row in max_values.iterrows():
+    row[12] = row.values[:-1].sum()
 
 # For RES
 # get unsplit data to rewrite everything that's unchanged
@@ -124,10 +140,10 @@ def writenewDDM(structures, firstLine, sampleCol, k, l):
                 row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1])+change[j+1])))
         elif row_data[1] in structures[1]: #If the structure is transbasin (to uncurtail)   
             # apply multiplier to 1st month
-            row_data[2] = str(int(float(diversions_uc[uncurtailed.index(row_data[1])][1])*LHsamples[k,sampleCol[1]]))
+            row_data[2] = str(int(max_values.loc[row_data[1]][0]*LHsamples[k,sampleCol[2]]))
             # apply multipliers to rest of the columns
-            for j in range(1,12):
-                row_data.append(str(int(float(diversions_uc[uncurtailed.index(row_data[1])][j+1])*LHsamples[k,sampleCol[1]]))) 
+            for j in range(1,13):
+                row_data.append(str(int(max_values.loc[row_data[1]][j]*LHsamples[k,sampleCol[2]]))) 
         elif row_data[1] in structures[2]: #If the structure is mun_ind 
             # apply multiplier to 1st month
             row_data[2] = str(int(float(row_data[2])*LHsamples[k,sampleCol[2]]))
