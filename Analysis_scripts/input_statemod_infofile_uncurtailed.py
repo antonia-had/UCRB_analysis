@@ -3,7 +3,6 @@ import math
 import numpy as np
 from string import Template
 import os
-import time
 import pandas as pd
 
 # =============================================================================
@@ -11,8 +10,9 @@ import pandas as pd
 # =============================================================================
 
 # Read in SOW parameters
-LHsamples = np.loadtxt('./LHsamples.txt') 
+LHsamples = np.loadtxt('./LHsamples_wider.txt') 
 nSamples = len(LHsamples[:,0])
+realizations = 10
 
 # Read/define relevant structures for each uncertainty
 reservoirs = np.genfromtxt('reservoirs.txt',dtype='str').tolist()
@@ -23,7 +23,7 @@ env_flows = ['7202003']
 shoshone = ['5300584']
 
 # List IDs of structures of interest for output files
-IDs = np.genfromtxt('metrics_structures_short.txt',dtype='str').tolist() 
+IDs = np.genfromtxt('metrics_structures.txt',dtype='str').tolist()
 info_clmn = [2, 4, 17] # Define columns of aspect of interest 
 
 # =============================================================================
@@ -100,7 +100,7 @@ f.close()
 # =============================================================================
 
 # Function for DDM files
-def writenewDDM(structures, firstLine, sampleCol, k, l):    
+def writenewDDM(structures, firstLine, k, l):    
     allstructures = []
     for m in range(len(structures)):
         allstructures.extend(structures[m])
@@ -110,7 +110,7 @@ def writenewDDM(structures, firstLine, sampleCol, k, l):
     new_data = []
     irrigation_encounters = np.zeros(len(structures[0]))
     # Divide Shoshone demand multiplier into on and off 
-    if LHsamples[k,sampleCol[3]]>0.5: 
+    if LHsamples[k,4]>0.5: 
         multiplier = 1
     else:
         multiplier = 0
@@ -140,16 +140,16 @@ def writenewDDM(structures, firstLine, sampleCol, k, l):
                 row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1])+change[j+1])))
         elif row_data[1] in structures[1]: #If the structure is transbasin (to uncurtail)   
             # apply multiplier to 1st month
-            row_data[2] = str(int(max_values.loc[row_data[1]][0]*LHsamples[k,sampleCol[2]]))
+            row_data[2] = str(int(max_values.loc[row_data[1]][0]*LHsamples[k,2]))
             # apply multipliers to rest of the columns
             for j in range(1,13):
-                row_data.append(str(int(max_values.loc[row_data[1]][j]*LHsamples[k,sampleCol[2]]))) 
+                row_data.append(str(int(max_values.loc[row_data[1]][j]*LHsamples[k,2]))) 
         elif row_data[1] in structures[2]: #If the structure is mun_ind 
             # apply multiplier to 1st month
-            row_data[2] = str(int(float(row_data[2])*LHsamples[k,sampleCol[2]]))
+            row_data[2] = str(int(float(row_data[2])*LHsamples[k,3]))
             # apply multipliers to rest of the columns
             for j in range(len(all_split_data_DDM[i+firstLine])-2):
-                row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1])*LHsamples[k,sampleCol[2]])))  
+                row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1])*LHsamples[k,3])))  
         elif row_data[1] not in allstructures:
             for j in range(len(all_split_data_DDM[i+firstLine])-2):
                 row_data.append(str(int(float(all_split_data_DDM[i+firstLine][j+1]))))                      
@@ -173,12 +173,12 @@ def writenewDDM(structures, firstLine, sampleCol, k, l):
     return None
 
 # Function for RES files
-def writenewRES(lines, sampleCol, k):
+def writenewRES(lines, k):
     copy_all_data_RES = np.copy(all_data_RES)       
     # Change only the specific lines
     for j in range(len(lines)):
         split_line = all_data_RES[lines[j]].split('.')
-        split_line[1] = ' ' + str(int(float(split_line[1])*LHsamples[k,sampleCol]))
+        split_line[1] = ' ' + str(int(float(split_line[1])*LHsamples[k,1]))
         copy_all_data_RES[lines[j]]=".".join(split_line)                
     # write new data to file
     f = open('./Experiment_files/'+ 'cm2015B.res'[0:-4] + '_S' + str(k+1) + 'cm2015B.res'[-4::],'w')
@@ -189,7 +189,7 @@ def writenewRES(lines, sampleCol, k):
     return None
 
 # Function for DDR files
-def writenewDDR(lines, sampleCol, k):
+def writenewDDR(lines, k):
     copy_all_data = np.copy(all_data_DDR)
     # Change only for specific samples
     if LHsamples[k,5]>0.5:
@@ -244,30 +244,55 @@ def writenewEVA(k):
 # Define output extraction function
 # =============================================================================
   
-def getinfo(k, j):
-    line_out = '' #Empty line for storing data to print in file   
-    # Get summarizing files for each structure and aspect of interest from the .xdd or .xss files
-    for ID in IDs:
-        if not os.path.exists('./Infofiles/' + ID):
-            os.makedirs('./Infofiles/' + ID)
-        with open ('./Infofiles/' +  ID + '/' + ID + '_info_' + str(k+1) + '_' + str(j+1) + '.txt','w') as f:
+def getinfo(k):
+    ID=IDs[k]
+    lines=[]
+    if not os.path.exists('./Infofiles_wide/' + ID):
+        os.makedirs('./Infofiles_wide/' + ID)
+    with open ('./Infofiles_wide/' +  ID + '/' + ID + '_info.txt','w') as f:
+        with open ('./Experiment_files/cm2015B_S1_1.xdd', 'rt') as xdd_file:
+            for line in xdd_file:
+                data = line.split()
+                if data:
+                    if data[0]==ID:
+                        if data[3]!='TOT':
+                            lines.append([data[2], data[4], data[17]])
+        xdd_file.close()
+        for j in range(1, realizations):
+            count=0
             try:
-                with open ('./Experiment_files/cm2015B_S' + str(k+1) + '_' + str(j+1) + '.xdd', 'rt') as xdd_file:
+                with open ('./Experiment_files/cm2015B_S1_' + str(j+1) + '.xdd', 'rt') as xdd_file:
                     for line in xdd_file:
                         data = line.split()
                         if data:
                             if data[0]==ID:
                                 if data[3]!='TOT':
-                                    for o in info_clmn:
-                                        line_out+=(data[o]+'\t')
-                                    f.write(line_out)
-                                    f.write('\n')
-                                    line_out = ''
+                                    lines[count].extend([data[4], data[17]])
+                                    count+=1
                 xdd_file.close()
-                f.close()
             except IOError:
-                f.write('999999\t999999\t999999')
-                f.close()
+                for i in range(len(lines)):
+                    lines[i].extend(['nan','nan'])
+        for s in range(1, nSamples):
+            for j in range(realizations):  
+                count=0
+                try:
+                    with open ('./Experiment_files/cm2015B_S'+ str(s+1)+ '_' + str(j+1) + '.xdd', 'rt') as xdd_file:
+                        for line in xdd_file:
+                            data = line.split()
+                            if data:
+                                if data[0]==ID:
+                                    if data[3]!='TOT':
+                                        lines[count].extend([data[4], data[17]])
+                                        count+=1
+                    xdd_file.close()
+                except IOError:
+                    for i in range(len(lines)):
+                        lines[i].extend(['nan','nan'])                    
+        for line in lines:
+            for item in line:
+                f.write("%s\t" % item)
+            f.write("\n")
 
 # =============================================================================
 # Start parallelization
@@ -296,7 +321,7 @@ else:
 # Loop though all SOWs
 # =============================================================================
 for k in range(start, stop):
-    for j in range(10): 
+    for j in range(realizations): 
         d = {}
         d['IWR'] = 'cm2015B_S' + str(k+1) + '_' + str(j+1) + 'a.iwr'
         d['XBM'] = 'cm2015x_S' + str(k+1) + '_' + str(j+1) + '.xbm'
@@ -308,16 +333,29 @@ for k in range(start, stop):
         f1 = open('./Experiment_files/cm2015B_S' + str(k+1) + '_' + str(j+1) + '.rsp', 'w')
         f1.write(S1)    
         f1.close()
-        writenewDDM([irrigation, transbasin, mun_ind, shoshone], 779, [0, 2, 3, 4], k, j)
-        writenewRES([395,348,422,290,580,621], 1, k)
-        writenewDDR([2019,2020,2021], 5, k)
+        writenewDDM([irrigation, transbasin, mun_ind, shoshone], 779, k, j)
+        writenewRES([395,348,422,290,580,621], k)
+        writenewDDR([2019,2020,2021], k)
         writenewEVA(k)
         os.system("./Experiment_files/statemod Experiment_files/cm2015B_S{}_{} -simulate".format(k+1,j+1))
-        # Wait 2 minutes for the experiment to run before getting outputs
-        time.sleep(120)
-        # Check if output file exists and if it's of the right size before extracting outputs
-        while not (os.path.exists('./Experiment_files/cm2015B_S'+str(k+1)+ '_' + str(j+1) + '.xdd') and \
-                  os.path.getsize('./Experiment_files/cm2015B_S'+str(k+1)+ '_' + str(j+1) + '.xdd') >> 10 > 502000):
-            time.sleep(1)
-        getinfo(k,j)
-        os.system("rm ./Experiment_files/cm2015B_S{}_{}.xdd".format(k+1,j+1))
+        
+comm.Barrier()
+
+# Determine the chunk which each processor will neeed to do
+count = int(math.floor(len(IDs)/nprocs))
+remainder = len(IDs) % nprocs
+
+# Use the processor rank to determine the chunk of work each processor will do
+if rank < remainder:
+	start = rank*(count+1)
+	stop = start + count + 1
+else:
+	start = remainder*(count+1) + (rank-remainder)*count
+	stop = start + count
+    
+for k in range(start, stop):
+        getinfo(k)
+
+comm.Barrier()
+if rank==1:        
+    os.system("rm ./Experiment_files/cm2015B_S*.xdd ./Experiment_files/cm2015B_S*.xre ./Experiment_files/cm2015B_S*.xss ./Experiment_files/cm2015B_S*.b44 ./Experiment_files/cm2015B_S*.b67 ./Experiment_files/cm2015B_S*.b43")
