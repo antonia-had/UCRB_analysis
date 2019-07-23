@@ -241,46 +241,6 @@ def writenewEVA(k):
     f.close()
 
 # =============================================================================
-# Define output extraction function
-# =============================================================================
-  
-def getinfo(k):
-    ID=IDs[k]
-    if not os.path.exists('./Infofiles_wide/' + ID):
-        os.makedirs('./Infofiles_wide/' + ID)
-    for s in range(nSamples):
-        lines=[]
-        with open ('./Infofiles_wide/' +  ID + '/' + ID + '_info_' + str(s+1) +'.txt','w') as f:
-            with open ('./Experiment_files/cm2015B_S'+ str(s+1)+ '_1.xdd', 'rt') as xdd_file:
-                for line in xdd_file:
-                    data = line.split()
-                    if data:
-                        if data[0]==ID:
-                            if data[3]!='TOT':
-                                lines.append([data[2], data[4], data[17]])
-            xdd_file.close()
-            for j in range(1, realizations):
-                count=0
-                try:
-                    with open ('./Experiment_files/cm2015B_S'+ str(s+1)+ '_' + str(j+1) + '.xdd', 'rt') as xdd_file:
-                        for line in xdd_file:
-                            data = line.split()
-                            if data:
-                                if data[0]==ID:
-                                    if data[3]!='TOT':
-                                        lines[count].extend([data[4], data[17]])
-                                        count+=1
-                    xdd_file.close()
-                except IOError:
-                    for i in range(len(lines)):
-                        lines[i].extend(['nan','nan'])
-            for line in lines:
-                for item in line:
-                    f.write("%s\t" % item)
-                f.write("\n")
-        f.close()
-
-# =============================================================================
 # Start parallelization
 # =============================================================================
     
@@ -324,24 +284,3 @@ for k in range(start, stop):
         writenewDDR([2019,2020,2021], k)
         writenewEVA(k)
         os.system("./Experiment_files/statemod Experiment_files/cm2015B_S{}_{} -simulate".format(k+1,j+1))
-        
-comm.Barrier()
-
-# Determine the chunk which each processor will neeed to do
-count = int(math.floor(len(IDs)/nprocs))
-remainder = len(IDs) % nprocs
-
-# Use the processor rank to determine the chunk of work each processor will do
-if rank < remainder:
-	start = rank*(count+1)
-	stop = start + count + 1
-else:
-	start = remainder*(count+1) + (rank-remainder)*count
-	stop = start + count
-    
-for k in range(start, stop):
-        getinfo(k)
-
-comm.Barrier()
-if rank==1:        
-    os.system("rm ./Experiment_files/cm2015B_S*.xdd ./Experiment_files/cm2015B_S*.xre ./Experiment_files/cm2015B_S*.xss ./Experiment_files/cm2015B_S*.b44 ./Experiment_files/cm2015B_S*.b67 ./Experiment_files/cm2015B_S*.b43")
