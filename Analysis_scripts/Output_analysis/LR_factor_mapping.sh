@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --partition=debug
-#SBATCH --nodes=1             # specify number of nodes
-#SBATCH --ntasks-per-node=10  # specify number of core per node
+#SBATCH --nodes=1  
+#SBATCH --ntasks-per-node=24
 #SBATCH --export=ALL
-#SBATCH -t 0:30:00            # set max wallclock time
-#SBATCH --job-name="factormapping" # name your job
-#SBATCH --output="output.out"
+#SBATCH -t 0:30:00
+#SBATCH --job-name="LR"
+#SBATCH --output="output/outputLR.out"
 
 module load python
 module load mpi4py

@@ -33,13 +33,7 @@ nStructures = len(all_IDs)
 percentiles = np.arange(0,100)
 samples = 1000
 realizations = 10
-
-#if not os.path.exists('./MultiyearShortageCurves/'):
-#    os.makedirs('./MultiyearShortageCurves/')
-#if not os.path.exists('./ShortagePercentileCurves/'):
-#        os.makedirs('./ShortagePercentileCurves/')
-#if not os.path.exists('./ShortageSensitivityCurves/'):
-#        os.makedirs('./ShortageSensitivityCurves/')
+idx = np.arange(2,22,2)
 
 def alpha(i, base=0.2):
     l = lambda x: x+base-x*base
@@ -106,8 +100,8 @@ def plotSDC(synthetic, histData, structure_name):
     ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
     ax1.set_ylabel('Years of continuous shortages', fontsize=12)
     fig.suptitle('Duration of shortage for ' + structure_name, fontsize=16)
-    fig.savefig('./MultiyearShortageCurves/' + structure_name + '.svg')
-    fig.savefig('./MultiyearShortageCurves/' + structure_name + '.png')
+    fig.savefig('./MultiyearShortageCurves_wide/' + structure_name + '.svg')
+    fig.savefig('./MultiyearShortageCurves_wide/' + structure_name + '.png')
     fig.clf()
     
     #Calculate synthetic shortage duration curves
@@ -146,8 +140,8 @@ def plotSDC(synthetic, histData, structure_name):
 
     fig.suptitle('Shortage magnitudes for ' + structure_name, fontsize=16)
     plt.subplots_adjust(bottom=0.2)
-    fig.savefig('./ShortagePercentileCurves/' + structure_name + '.svg')
-    fig.savefig('./ShortagePercentileCurves/' + structure_name + '.png')
+    fig.savefig('./ShortagePercentileCurves_wide/' + structure_name + '.svg')
+    fig.savefig('./ShortagePercentileCurves_wide/' + structure_name + '.png')
     fig.clf()
     
 #    '''
@@ -238,7 +232,10 @@ def plotSDC(synthetic, histData, structure_name):
 #    fig.suptitle('Shortage magnitude sensitivity for '+ structure_name, fontsize=16)
 #    fig.savefig('./ShortageSensitivityCurves/' + structure_name + '_delta.svg')
 #    fig.savefig('./ShortageSensitivityCurves/' + structure_name + '_delta.png')
-
+    
+'''
+Get data for historic file.
+'''
 def getinfo(ID):
     line_out = '' #Empty line for storing data to print in file   
     # Get summarizing files for each structure and aspect of interest from the .xdd or .xss files
@@ -296,14 +293,13 @@ for i in range(start, stop):
 #                synthetic[:,j,r]+=data
 #    else:
     histData = np.loadtxt('./Infofiles_wide/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]
-    synthetic = np.zeros([len(histData), samples, realizations])
+    synthetic = np.zeros([len(histData), samples*realizations])
     for j in range(samples):
-        print(j+1)
-        data= np.loadtxt('./Infofiles_wide/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_' + str(j+1) + '.txt')   
-        for r in range(realizations):
-            synthetic[:,j,r]=data[:,(r+1)*2]
-    # Reshape into timeseries x all experiments
-    synthetic = np.reshape(synthetic, (len(histData), samples*realizations))
+        data= np.loadtxt('./Infofiles_wide/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_' + str(j+1) + '.txt') 
+        try:
+            synthetic[:,j*realizations:j*realizations+realizations]=data[:,idx]
+        except IndexError:
+            print(all_IDs[i] + '_info_' + str(j+1))
     plotSDC(synthetic, histData, all_IDs[i])
 
     

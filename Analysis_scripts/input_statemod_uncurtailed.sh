@@ -9,4 +9,5 @@
 
 module load python
 module load mpi4py
+module load scipy
 ibrun python input_statemod_uncurtailed.py
