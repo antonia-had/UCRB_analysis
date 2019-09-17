@@ -5,9 +5,9 @@ import scipy.stats
 import matplotlib as mpl
 import matplotlib.pyplot as plt 
 plt.switch_backend('agg')
-import itertools
 from mpi4py import MPI
 import math
+import os
 plt.ioff()
 
 LHsamples = np.loadtxt('./Global_experiment_uncurtailed/LHsamples_wider.txt') 
@@ -22,7 +22,7 @@ param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
 
 irrigation_structures = np.genfromtxt('./Global_experiment_uncurtailed/irrigation.txt',dtype='str').tolist()
 TBDs = np.genfromtxt('./Global_experiment_uncurtailed/TBD.txt',dtype='str').tolist()
-all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures.txt',dtype='str').tolist()[:24]
+all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures.txt',dtype='str').tolist()[:1]
 nStructures = len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
@@ -35,6 +35,150 @@ nMonths = n * 105 #Record is 105 years long
 idx_shortage = np.arange(2,22,2)
 idx_demand = np.arange(1,21,2)
 
+# Set arrays for shortage frequencies and magnitudes
+frequencies = np.arange(10, 110, 10)
+magnitudes = np.arange(10, 110, 10)
+streamdemand = np.arange(810*60.3707*0.5, 810*60.3707*1.5, 810*60.3707/10)[::-1]
+
+def roundup(x):
+    return int(math.ceil(x / 10.0)) * 10
+
+def highlight_cell(x,y, ax=None, **kwargs):
+    rect = plt.Rectangle((x-.5, y-.5), 1,1, fill=False, **kwargs)
+    ax = ax or plt.gca()
+    ax.add_patch(rect)
+    return rect
+
+def plotfailureheatmap(ID):
+    if ID=='7202003':
+        streamflow = np.zeros([nMonths,len(LHsamples[:,0])*realizations])
+        
+        for j in range(len(LHsamples[:,0])):
+            data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +\
+                             ID + '/' + ID + '_streamflow_' + str(j+1) + '.txt')[:,1:]
+            streamflow[:,j*realizations:j*realizations+realizations]=data
+        
+        streamflowhistoric = np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +\
+                                        ID + '/' + ID + '_streamflow_0.txt')[:,1]
+        
+        historic_percents = [100-scipy.stats.percentileofscore(streamflowhistoric, dem, kind='strict') for dem in streamdemand]
+
+        percentSOWs = np.zeros([len(frequencies), len(streamdemand)])
+        allSOWs = np.zeros([len(frequencies), len(streamdemand), len(LHsamples[:,0])*realizations])
+        
+        for j in range(len(frequencies)):
+            for h in range(len(streamdemand)):
+                success = np.zeros(len(LHsamples[:,0])*realizations)
+                for k in range(len(success)):
+                    if 100 - scipy.stats.percentileofscore(streamflow[:,k], streamdemand[h], kind='strict')>(100-frequencies[j]):
+                        success[k]=100
+                allSOWs[j,h,:]=success
+                percentSOWs[j,h]=np.mean(success)
+        gridcells = []
+        for x in historic_percents:
+            try:
+                gridcells.append(list(frequencies)[::-1].index(roundup(x)))
+            except:
+                gridcells.append(0)
+        
+    else:                     
+        data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +  ID + '/' + ID + '_info_0.txt')
+        historic_demands = data[:,1]
+        historic_shortages = data[:,2]
+        #reshape into water years
+        historic_shortages_f= np.reshape(historic_shortages, (int(np.size(historic_shortages)/n), n))
+        historic_demands_f= np.reshape(historic_demands, (int(np.size(historic_demands)/n), n))
+        
+        historic_demands_f_WY = np.sum(historic_demands_f,axis=1)
+        historic_shortages_f_WY = np.sum(historic_shortages_f,axis=1)
+        historic_ratio = (historic_shortages_f_WY*100)/historic_demands_f_WY
+        historic_percents = [100-scipy.stats.percentileofscore(historic_ratio, mag, kind='strict') for mag in magnitudes]
+        
+        percentSOWs = np.zeros([len(frequencies), len(magnitudes)])
+        allSOWs = np.zeros([len(frequencies), len(magnitudes), len(LHsamples[:,0])*realizations])
+        
+        shortages = np.zeros([nMonths,len(LHsamples[:,0])*realizations])
+        demands = np.zeros([nMonths,len(LHsamples[:,0])*realizations])
+        for j in range(len(LHsamples[:,0])):
+            data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +  ID + '/' + ID + '_info_' + str(j+1) + '.txt')
+            try:
+                demands[:,j*realizations:j*realizations+realizations]=data[:,idx_demand]
+                shortages[:,j*realizations:j*realizations+realizations]=data[:,idx_shortage]
+            except:
+                print('problem with ' + ID + '_info_' + str(j+1))
+                
+        #Reshape into water years
+        #Create matrix of [no. years x no. months x no. experiments]
+        f_shortages = np.zeros([int(nMonths/n),n,len(LHsamples[:,0])*realizations])
+        f_demands = np.zeros([int(nMonths/n),n,len(LHsamples[:,0])*realizations]) 
+        for i in range(len(LHsamples[:,0])*realizations):
+            f_shortages[:,:,i]= np.reshape(shortages[:,i], (int(np.size(shortages[:,i])/n), n))
+            f_demands[:,:,i]= np.reshape(demands[:,i], (int(np.size(demands[:,i])/n), n))
+        
+        # Shortage per water year
+        f_demands_WY = np.sum(f_demands,axis=1)
+        f_shortages_WY = np.sum(f_shortages,axis=1)
+        for j in range(len(frequencies)):
+            for h in range(len(magnitudes)):
+                success = np.zeros(len(LHsamples[:,0])*realizations)
+                for k in range(len(success)):
+                    ratio = (f_shortages_WY[:,k]*100)/f_demands_WY[:,k]
+                    if scipy.stats.percentileofscore(ratio, magnitudes[h], kind='strict')>(100-frequencies[j]):
+                        success[k]=100
+                allSOWs[j,h,:]=success
+                percentSOWs[j,h]=np.mean(success)
+                
+        gridcells = []
+        for x in historic_percents:
+            try:
+                gridcells.append(list(frequencies).index(roundup(x)))
+            except:
+                gridcells.append(0)
+    
+    fig, ax = plt.subplots()
+    im = ax.imshow(percentSOWs, norm = mpl.colors.Normalize(vmin=0.0,vmax=100.0), cmap='RdBu',interpolation='None')
+    for j in range(len(frequencies)):
+        for h in range(len(magnitudes)):
+            ax.text(h, j, int(percentSOWs[j,h]),
+                           ha="center", va="center", color="w")
+    
+    if ID=='7202003':
+        ax.set_xticks(np.arange(len(streamdemand)))
+        ax.set_xticklabels([str(int(x/60.3707)) for x in list(streamdemand)])
+        ax.set_xlabel("Streamflow to meet (cfs)")
+        ax.set_ylabel("Percent of time flow is met")
+        ax.set_yticks(np.arange(len(frequencies)))
+        ax.set_yticklabels([str(x) for x in list(frequencies)[::-1]])        
+    else:
+        ax.set_xticks(np.arange(len(magnitudes)))
+        ax.set_xticklabels([str(x) for x in list(magnitudes)])
+        ax.set_xlabel("Percent of demand that is short")
+        ax.set_ylabel("Percent of time shortage is experienced")
+        ax.set_yticks(np.arange(len(frequencies)))
+        ax.set_yticklabels([str(x) for x in list(frequencies)])
+        
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+    for edge, spine in ax.spines.items():
+        spine.set_visible(False)
+
+    ax.set_xticks(np.arange(percentSOWs.shape[1]+1)-.5, minor=True)
+    ax.set_yticks(np.arange(percentSOWs.shape[0]+1)-.5, minor=True)
+    #ax.grid(which="minor", color="w", linestyle='-', linewidth=1)
+    ax.tick_params(which="minor", bottom=False, left=False)
+    
+    cbar = ax.figure.colorbar(im, ax=ax, cmap='RdBu')
+    cbar.ax.set_ylabel("Percentage of SOWs where criterion was met", rotation=-90, va="bottom")
+    
+    for i in range(len(historic_percents)):
+        if historic_percents[i]!=0:
+            highlight_cell(i,gridcells[i], color="orange", linewidth=4)
+    
+    fig.tight_layout()
+    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/Heatmaps/'+ID+'.png')
+    plt.close()
+    
+    return(allSOWs)       
+
 def fitLogit(dta, predictors):
     # concatenate intercept column of 1s
     dta['Intercept'] = np.ones(np.shape(dta)[0]) 
@@ -44,7 +188,6 @@ def fitLogit(dta, predictors):
     logit = sm.Logit(dta['Success'], dta[cols])
     result = logit.fit() 
     return result  
-
 
 def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid, \
     xvar, yvar, base):
@@ -65,287 +208,117 @@ def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid
     ax.set_xlabel(xvar,fontsize=10)
     ax.set_ylabel(yvar,fontsize=10)
     ax.tick_params(axis='both',labelsize=6)
- 
     return contourset
 
-def shortage_duration(sequence, value):
-    cnt_shrt = [sequence[i]>value for i in range(len(sequence))] # Returns a list of True values when there's a shortage about the value
-    shrt_dur = [ sum( 1 for _ in group ) for key, group in itertools.groupby( cnt_shrt ) if key ] # Counts groups of True values
-    return shrt_dur
+#def shortage_duration(sequence, value):
+#    cnt_shrt = [sequence[i]>value for i in range(len(sequence))] # Returns a list of True values when there's a shortage about the value
+#    shrt_dur = [ sum( 1 for _ in group ) for key, group in itertools.groupby( cnt_shrt ) if key ] # Counts groups of True values
+#    return shrt_dur
 
 def factor_mapping(ID):
-    print(ID)
+    allSOWsperformance = plotfailureheatmap(ID)/100
+    if not os.path.exists('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+ ID):
+        os.makedirs('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+ ID)
     if ID!='7202003':
-        shortages = np.zeros([nMonths,len(LHsamples[:,0])*realizations])
-        demands = np.zeros([nMonths,len(LHsamples[:,0])*realizations])
-        for j in range(len(LHsamples[:,0])):
-            data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +  ID + '/' + ID + '_info_' + str(j+1) + '.txt')
-            try:
-                demands[:,j*realizations:j*realizations+realizations]=data[:,idx_demand]
-                shortages[:,j*realizations:j*realizations+realizations]=data[:,idx_shortage]
-            except:
-                print('problem with ' + ID + '_info_' + str(j+1))
-        #Reshape into water years
-        #Create matrix of [no. years x no. months x no. experiments]
-        f_shortages = np.zeros([int(nMonths/n),n,len(LHsamples[:,0])*realizations])
-        f_demands = np.zeros([int(nMonths/n),n,len(LHsamples[:,0])*realizations]) 
-        for i in range(len(LHsamples[:,0])*realizations):
-            f_shortages[:,:,i]= np.reshape(shortages[:,i], (int(np.size(shortages[:,i])/n), n))
-            f_demands[:,:,i]= np.reshape(demands[:,i], (int(np.size(demands[:,i])/n), n))
-        
-        # Shortage per water year
-        f_demands_WY = np.sum(f_demands,axis=1)
-        f_shortages_WY = np.sum(f_shortages,axis=1)
-        
-        if ID in irrigation_structures:
-            print(ID + ' is an irrigation structure')
-            fail_duration = [20, 10, 5, 2]
-            fail_shortage = [20, 30, 50, 70]
-            for j in range(len(fail_duration)):
-                for h in range(len(fail_shortage)):
-                    pseudo_r_scores = np.zeros(params_no)
-                    # Logistic regression analysis
-                    dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
-                    success = np.ones(len(LHsamples[:,0])*realizations)
-                    for k in range(len(success)):
-                        # Time series of ratio of shortage to demand
-                        ratio = (f_shortages_WY[:,k]*100)/f_demands_WY[:,k]
-                        if np.percentile(ratio, fail_duration[j])>fail_shortage[h]:
-                            success[k]=0
-                    dta['Success']=success
-                    for m in range(params_no):
-                        predictors = dta.columns.tolist()[m:(m+1)]
-                        try:
-                            result = fitLogit(dta, predictors)
-                            pseudo_r_scores[m]=result.prsquared
-                        except: 
-                            pseudo_r_scores[m]=pseudo_r_scores[m]
-                    print('got logit results')
-                    np.savetxt('./Global_experiment_uncurtailed/Factor_mapping/'+ ID +'_'+str(fail_duration[j])+'yrsw'+str(fail_shortage[h])+\
-                                   '.csv', pseudo_r_scores, delimiter=",")
-                    if pseudo_r_scores.any():
-                        fig, axes = plt.subplots(1,3)
-                        axes = axes.ravel()
-                        top_predictors = np.argsort(pseudo_r_scores)[::-1][:3] #Sort scores and pick top 3 predictors
-                          
-                        # define color map for dots representing SOWs in which the policy
-                        # succeeds (light blue) and fails (dark red)
-                        dot_cmap = mpl.colors.ListedColormap(np.array([[227,26,28],[166,206,227]])/255.0)
-                         
-                        # define color map for probability contours
-                        contour_cmap = mpl.cm.get_cmap('RdBu')
-                         
-                        # define probability contours
-                        contour_levels = np.arange(0.0, 1.05,0.1)
-                        
-                        # define base values of the predictors
-                        base = SOW_values[top_predictors]
-                         
-                        # define grid of x (1st predictor), and y (2nd predictor) dimensions
-                        # to plot contour map over
-                        xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], 0.01)
-                        ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], 0.01)
-                        zgrid = np.arange(param_bounds[top_predictors[2]][0], param_bounds[top_predictors[2]][1], 0.01)
-                        all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
-                        
-                        #Axes 0
-                        result = fitLogit(dta, [all_predictors[i] for i in [0,1]])
-                        # plot contour map when 3rd predictor ('x3') is held constant
-                        contourset = plotContourMap(axes[0], result, dta, contour_cmap, dot_cmap, contour_levels, xgrid, ygrid, all_predictors[0], all_predictors[1], base)
-                        
-                        #Axes 1
-                        result = fitLogit(dta, [all_predictors[i] for i in [0,2]])
-                        # plot contour map when 3rd predictor ('x3') is held constant
-                        contourset = plotContourMap(axes[1], result, dta, contour_cmap, dot_cmap, contour_levels, xgrid, zgrid, all_predictors[0], all_predictors[2], base)    
-                        
-                        #Axes 2
-                        result = fitLogit(dta, [all_predictors[i] for i in [1,2]])
-                        # plot contour map when 3rd predictor ('x3') is held constant
-                        contourset = plotContourMap(axes[2], result, dta, contour_cmap, dot_cmap, contour_levels, ygrid, zgrid, all_predictors[1], all_predictors[2], base) 
-                        
-                        plt.show()     
-                        fig.subplots_adjust(wspace=0.5,hspace=0.3,right=0.8)
-                        cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-                        cbar = fig.colorbar(contourset, cax=cbar_ax)
-                        cbar_ax.set_ylabel('Probability',fontsize=12)
-                        yticklabels = cbar.ax.get_yticklabels()
-                        cbar.ax.set_yticklabels(yticklabels,fontsize=10)
-                        fig.set_size_inches([14.5,8])
-                        fig.suptitle('Probability of not exceeding historic shortage each percentile for '+ID)
-                        #fig.savefig('./Factor_mapping/'+ID+'_LR_probability.svg')
-                        fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/Figures/'+\
-                                    ID+'_'+str(fail_duration[j])+'yrsw'+str(fail_shortage[h])+\
-                                    'pcshort.png')
-                        plt.close()
-        
-        else:
-            print(ID + ' is not an irrigation structure')
-            fail_duration = [10, 7, 5]
-            fail_shortage = [5, 10, 20]
-            for j in range(len(fail_duration)):
-                for h in range(len(fail_shortage)):
-                    pseudo_r_scores = np.zeros(params_no)
-                    # Logistic regression analysis
-                    dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
-                    success = np.ones(len(LHsamples[:,0])*realizations)
-                    for k in range(len(success)):
-                        # Time series of ratio of shortage to demand
-                        ratio = (f_shortages_WY[:,k]*100)/f_demands_WY[:,k]
-                        durations = shortage_duration(ratio, fail_shortage[j])
-                        if len(durations)>0:
-                            if max(durations)>fail_duration[h]:
-                                success[k]=0
-                    dta['Success']=success
-                    for m in range(params_no):
-                        predictors = dta.columns.tolist()[m:(m+1)]
-                        try:
-                            result = fitLogit(dta, predictors)
-                            pseudo_r_scores[m]=result.prsquared
-                        except: 
-                            pseudo_r_scores[m]=pseudo_r_scores[m]
-                    print('got logit results')
-                    np.savetxt('./Global_experiment_uncurtailed/Factor_mapping/'+ ID +'_'+str(fail_duration[j])+'yrsw'+str(fail_shortage[h])+\
-                                   '.csv', pseudo_r_scores, delimiter=",")
-                    if pseudo_r_scores.any():
-                        fig, axes = plt.subplots(1,3)
-                        axes = axes.ravel()
-                        top_predictors = np.argsort(pseudo_r_scores)[::-1][:3] #Sort scores and pick top 3 predictors
-                          
-                        # define color map for dots representing SOWs in which the policy
-                        # succeeds (light blue) and fails (dark red)
-                        dot_cmap = mpl.colors.ListedColormap(np.array([[227,26,28],[166,206,227]])/255.0)
-                         
-                        # define color map for probability contours
-                        contour_cmap = mpl.cm.get_cmap('RdBu')
-                         
-                        # define probability contours
-                        contour_levels = np.arange(0.0, 1.05,0.1)
-                        
-                        # define base values of the predictors
-                        base = SOW_values[top_predictors]
-                         
-                        # define grid of x (1st predictor), and y (2nd predictor) dimensions
-                        # to plot contour map over
-                        xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], 0.01)
-                        ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], 0.01)
-                        zgrid = np.arange(param_bounds[top_predictors[2]][0], param_bounds[top_predictors[2]][1], 0.01)
-                        all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
-                        
-                        #Axes 0
-                        result = fitLogit(dta, [all_predictors[i] for i in [0,1]])
-                        # plot contour map when 3rd predictor ('x3') is held constant
-                        contourset = plotContourMap(axes[0], result, dta, contour_cmap, dot_cmap, contour_levels, xgrid, ygrid, all_predictors[0], all_predictors[1], base)
-                        
-                        #Axes 1
-                        result = fitLogit(dta, [all_predictors[i] for i in [0,2]])
-                        # plot contour map when 3rd predictor ('x3') is held constant
-                        contourset = plotContourMap(axes[1], result, dta, contour_cmap, dot_cmap, contour_levels, xgrid, zgrid, all_predictors[0], all_predictors[2], base)    
-                        
-                        #Axes 2
-                        result = fitLogit(dta, [all_predictors[i] for i in [1,2]])
-                        # plot contour map when 3rd predictor ('x3') is held constant
-                        contourset = plotContourMap(axes[2], result, dta, contour_cmap, dot_cmap, contour_levels, ygrid, zgrid, all_predictors[1], all_predictors[2], base) 
-                        
-                        plt.show()     
-                        fig.subplots_adjust(wspace=0.5,hspace=0.3,right=0.8)
-                        cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-                        cbar = fig.colorbar(contourset, cax=cbar_ax)
-                        cbar_ax.set_ylabel('Probability',fontsize=12)
-                        yticklabels = cbar.ax.get_yticklabels()
-                        cbar.ax.set_yticklabels(yticklabels,fontsize=10)
-                        fig.set_size_inches([14.5,8])
-                        fig.suptitle('Probability of not exceeding historic shortage each percentile for '+ID)
-                        #fig.savefig('./Factor_mapping/'+ID+'_LR_probability.svg')
-                        fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/Figures/'+\
-                                    ID+'_'+str(fail_duration[j])+'yrsw'+str(fail_shortage[h])+\
-                                    'pcshort.png')
-                        plt.close()
-                        
+        all_pseudo_r_scores = pd.DataFrame()
+        for j in range(len(frequencies)):
+            for h in range(len(magnitudes)):
+                pseudo_r_scores = np.zeros(params_no)
+                # Logistic regression analysis
+                dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
+                dta['Success']=allSOWsperformance[j,h,:]
+                for m in range(params_no):
+                    predictors = dta.columns.tolist()[m:(m+1)]
+                    try:
+                        result = fitLogit(dta, predictors)
+                        pseudo_r_scores[m]=result.prsquared
+                    except: 
+                        pseudo_r_scores[m]=pseudo_r_scores[m]
+                all_pseudo_r_scores[str(frequencies[j])+'yrs_'+str(magnitudes[h])+'prc']=pseudo_r_scores
+                if pseudo_r_scores.any():
+                    fig, axes = plt.subplots(1,1)
+                    top_predictors = np.argsort(pseudo_r_scores)[::-1][:2] #Sort scores and pick top 2 predictors
+                    # define color map for dots representing SOWs in which the policy
+                    # succeeds (light blue) and fails (dark red)
+                    dot_cmap = mpl.colors.ListedColormap(np.array([[227,26,28],[166,206,227]])/255.0)
+                    # define color map for probability contours
+                    contour_cmap = mpl.cm.get_cmap('RdBu')
+                    # define probability contours
+                    contour_levels = np.arange(0.0, 1.05,0.1)
+                    # define base values of the predictors
+                    base = SOW_values[top_predictors]
+                    # define grid of x (1st predictor), and y (2nd predictor) dimensions
+                    # to plot contour map over
+                    xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], 0.01)
+                    ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], 0.01)
+                    all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
+                    result = fitLogit(dta, [all_predictors[i] for i in [0,1]])
+                    contourset = plotContourMap(axes, result, dta, contour_cmap, 
+                                                dot_cmap, contour_levels, xgrid, 
+                                                ygrid, all_predictors[0], all_predictors[1], base)
+                    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+                    cbar = fig.colorbar(contourset, cax=cbar_ax)
+                    cbar_ax.set_ylabel('Probability',fontsize=12)
+                    yticklabels = cbar.ax.get_yticklabels()
+                    cbar.ax.set_yticklabels(yticklabels,fontsize=10)
+                    fig.set_size_inches([14.5,8])
+                    fig.suptitle('Probability of not having a '+ str(magnitudes[h]) +\
+                                 ' shortage ' +  str(frequencies[j]) + '% of the time for '+ ID)
+                    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+\
+                                ID+'/'+str(frequencies[j])+'yrsw'+str(magnitudes[h])+'pcshortm.png')
+                    plt.close()
+        all_pseudo_r_scores.to_csv('./Global_experiment_uncurtailed/Factor_mapping/'+ ID + '_pseudo_r_scores.csv', sep=",")                        
     elif ID=='7202003':
-        print(ID + ' is 15-mile reach')
-        streamflow = np.zeros([nMonths,len(LHsamples[:,0])*realizations])
-        streamflowhistoric = np.zeros([nMonths])
-        for j in range(len(LHsamples[:,0])):
-            data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +  ID + '/' + ID + '_streamflow_' + str(j+1) + '.txt')[:,1:]
-            streamflow[:,j*realizations:j*realizations+realizations]=data
-        streamflowhistoric = np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +  ID + '/' + ID + '_streamflow_0.txt')[:,1]
-        
-        fail_shortage = [35000, 40000, 48900, 55000]
-        for h in range(len(fail_shortage)):
-            pseudo_r_scores = np.zeros(params_no)
-            # Logistic regression analysis
-            dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
-            historicworst = max(shortage_duration(streamflowhistoric, fail_shortage[h]))
-            success = np.ones(len(LHsamples[:,0])*realizations)
-            for k in range(len(success)):
-                durations = shortage_duration(streamflow[:,k], fail_shortage[h])
-                if len(durations)>0:
-                    if max(durations)>historicworst:
-                        success[k]=0
-            dta['Success']=success
-            for m in range(params_no):
-                predictors = dta.columns.tolist()[m:(m+1)]
-                try:
-                    result = fitLogit(dta, predictors)
-                    pseudo_r_scores[m]=result.prsquared
-                except: 
-                    pseudo_r_scores[m]=pseudo_r_scores[m]
-            np.savetxt('./Global_experiment_uncurtailed/Factor_mapping/'+ ID +'_'+str(fail_shortage[h])+\
-                           '.csv', pseudo_r_scores, delimiter=",")
-            if pseudo_r_scores.any():
-                fig, axes = plt.subplots(1,3)
-                axes = axes.ravel()
-                top_predictors = np.argsort(pseudo_r_scores)[::-1][:3] #Sort scores and pick top 3 predictors
-                  
-                # define color map for dots representing SOWs in which the policy
-                # succeeds (light blue) and fails (dark red)
-                dot_cmap = mpl.colors.ListedColormap(np.array([[227,26,28],[166,206,227]])/255.0)
-                 
-                # define color map for probability contours
-                contour_cmap = mpl.cm.get_cmap('RdBu')
-                 
-                # define probability contours
-                contour_levels = np.arange(0.0, 1.05,0.1)
-                
-                # define base values of the predictors
-                base = SOW_values[top_predictors]
-                 
-                # define grid of x (1st predictor), and y (2nd predictor) dimensions
-                # to plot contour map over
-                xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], 0.01)
-                ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], 0.01)
-                zgrid = np.arange(param_bounds[top_predictors[2]][0], param_bounds[top_predictors[2]][1], 0.01)
-                all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
-                
-                #Axes 0
-                result = fitLogit(dta, [all_predictors[i] for i in [0,1]])
-                # plot contour map when 3rd predictor ('x3') is held constant
-                contourset = plotContourMap(axes[0], result, dta, contour_cmap, dot_cmap, contour_levels, xgrid, ygrid, all_predictors[0], all_predictors[1], base)
-                
-                #Axes 1
-                result = fitLogit(dta, [all_predictors[i] for i in [0,2]])
-                # plot contour map when 3rd predictor ('x3') is held constant
-                contourset = plotContourMap(axes[1], result, dta, contour_cmap, dot_cmap, contour_levels, xgrid, zgrid, all_predictors[0], all_predictors[2], base)    
-                
-                #Axes 2
-                result = fitLogit(dta, [all_predictors[i] for i in [1,2]])
-                # plot contour map when 3rd predictor ('x3') is held constant
-                contourset = plotContourMap(axes[2], result, dta, contour_cmap, dot_cmap, contour_levels, ygrid, zgrid, all_predictors[1], all_predictors[2], base) 
-                
-                plt.show()     
-                fig.subplots_adjust(wspace=0.5,hspace=0.3,right=0.8)
-                cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-                cbar = fig.colorbar(contourset, cax=cbar_ax)
-                cbar_ax.set_ylabel('Probability',fontsize=12)
-                yticklabels = cbar.ax.get_yticklabels()
-                cbar.ax.set_yticklabels(yticklabels,fontsize=10)
-                fig.set_size_inches([14.5,8])
-                fig.suptitle('Probability of not exceeding historic shortage each percentile for '+ID)
-                #fig.savefig('./Factor_mapping/'+ID+'_LR_probability.svg')
-                fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/Figures/'+\
-                            ID+'_'+str(fail_duration[j])+'yrsw'+str(fail_shortage[h])+\
-                            'pcshort.png')
-                plt.close()
+        all_pseudo_r_scores = pd.DataFrame()
+        for j in range(len(frequencies)):
+            for h in range(len(streamdemand)):
+                pseudo_r_scores = np.zeros(params_no)
+                # Logistic regression analysis
+                dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
+                dta['Success']=allSOWsperformance[j,h,:]
+                for m in range(params_no):
+                    predictors = dta.columns.tolist()[m:(m+1)]
+                    try:
+                        result = fitLogit(dta, predictors)
+                        pseudo_r_scores[m]=result.prsquared
+                    except: 
+                        pseudo_r_scores[m]=pseudo_r_scores[m]
+                all_pseudo_r_scores[str(frequencies[::-1][j])+'yrs_'+str(int(streamdemand[h]/60.3707))+'prc']=pseudo_r_scores
+                if pseudo_r_scores.any():
+                    fig, axes = plt.subplots(1,1)
+                    top_predictors = np.argsort(pseudo_r_scores)[::-1][:2] #Sort scores and pick top 2 predictors
+                    # define color map for dots representing SOWs in which the policy
+                    # succeeds (light blue) and fails (dark red)
+                    dot_cmap = mpl.colors.ListedColormap(np.array([[227,26,28],[166,206,227]])/255.0)
+                    # define color map for probability contours
+                    contour_cmap = mpl.cm.get_cmap('RdBu')
+                    # define probability contours
+                    contour_levels = np.arange(0.0, 1.05,0.1)
+                    # define base values of the predictors
+                    base = SOW_values[top_predictors]
+                    # define grid of x (1st predictor), and y (2nd predictor) dimensions
+                    # to plot contour map over
+                    xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], 0.01)
+                    ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], 0.01)
+                    all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
+                    result = fitLogit(dta, [all_predictors[i] for i in [0,1]])
+                    contourset = plotContourMap(axes, result, dta, contour_cmap, 
+                                                dot_cmap, contour_levels, xgrid, 
+                                                ygrid, all_predictors[0], all_predictors[1], base)
+                    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+                    cbar = fig.colorbar(contourset, cax=cbar_ax)
+                    cbar_ax.set_ylabel('Probability',fontsize=12)
+                    yticklabels = cbar.ax.get_yticklabels()
+                    cbar.ax.set_yticklabels(yticklabels,fontsize=10)
+                    fig.set_size_inches([14.5,8])
+                    fig.suptitle('Probability of not having a '+ str(int(streamdemand[h]/60.3707)) +\
+                                 ' cf/s flow ' +  str(frequencies[::-1][j]) + '% of the time for '+ ID)
+                    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+\
+                                ID+'/'+str(frequencies[::-1][j])+'yrsw'+str(int(streamdemand[h]/60.3707))+'pcshortm.png')
+                    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+\
+                                ID+'/'+str(frequencies[::-1][j])+'yrsw'+str(int(streamdemand[h]/60.3707))+'pcshortm.svg')                    
+                    plt.close()
+        all_pseudo_r_scores.to_csv('./Global_experiment_uncurtailed/Factor_mapping/'+ ID + '_pseudo_r_scores.csv', sep=",")                        
         
 
     

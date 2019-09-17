@@ -60,15 +60,15 @@ def getinfo(s):
                                 introdata = data[0].split()
                                 if introdata[0]==ID:
                                     if introdata[3]!='TOT':
-                                        lines.append([data[24]])
+                                        lines[count].append(data[24])
                                         count+=1
                     else:
                         for i in range(len(lines)):
-                            lines[i].extend(['nan'])
+                            lines[i].extend('-999')
                 xdd_file.close()
             except IOError:
                 for i in range(len(lines)):
-                    lines[i].extend(['nan'])
+                    lines[i].extend('-999')
         for line in lines:
             for item in line:
                 f.write("%s\t" % item)

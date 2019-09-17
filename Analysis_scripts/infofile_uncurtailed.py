@@ -10,7 +10,7 @@ import os
 # Read in SOW parameters
 #LHsamples = np.loadtxt('./LHsamples_wider.txt') 
 #nSamples = len(LHsamples[:,0])
-LHsamples = [752, 755, 766]
+LHsamples = [299, 591, 754, 599, 765, 949]
 nSamples = len(LHsamples)
 realizations = 10
 
@@ -60,11 +60,11 @@ def getinfo(k):
                                             count+=1
                         else:
                             for i in range(len(lines)):
-                                lines[i].extend(['nan','nan'])
+                                lines[i].extend(['-999.','-999.'])
                     xdd_file.close()
                 except IOError:
                     for i in range(len(lines)):
-                        lines[i].extend(['nan','nan'])
+                        lines[i].extend(['-999.','-999.'])
             for line in lines:
                 for item in line:
                     f.write("%s\t" % item)
