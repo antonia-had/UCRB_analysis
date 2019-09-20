@@ -11,6 +11,7 @@ from mpi4py import MPI
 import math
 plt.ioff()
 
+transbasin = np.genfromtxt('TBD.txt',dtype='str').tolist()
 #WDs = ['36','37','38','39','45','50','51','52','53','70','72']
 #non_irrigation_structures = np.genfromtxt('non_irrigation.txt',dtype='str').tolist() #list IDs of structures of interest
 #irrigation_structures = [[]]*len(WDs) 
@@ -18,7 +19,7 @@ plt.ioff()
 #    irrigation_structures[i] = np.genfromtxt(WDs[i]+'_irrigation.txt',dtype='str').tolist()
 #irrigation_structures_flat = [item for sublist in irrigation_structures for item in sublist]
 all_IDs = np.genfromtxt('./metrics_structures.txt',dtype='str').tolist()[:2] #irrigation_structures_flat+WDs+non_irrigation_structures
-nStructures = len(all_IDs)
+nStructures = len(transbasin)
 # Longform parameter names to use in figure legend
 #parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
 #                        'TBD demand multiplier', 'M&I demand multiplier', 
@@ -241,19 +242,34 @@ def getinfo(ID):
     # Get summarizing files for each structure and aspect of interest from the .xdd or .xss files
     with open ('./Infofiles_wide/' +  ID + '/' + ID + '_info_0.txt','w') as f:
         try:
-            with open ('./cm2015B.xdd', 'rt') as xdd_file:
-                for line in xdd_file:
-                    data = line.split()
-                    if data:
-                        if data[0]==ID:
-                            if data[3]!='TOT':
-                                for o in [2, 4, 17]:
-                                    line_out+=(data[o]+'\t')
-                                f.write(line_out)
-                                f.write('\n')
-                                line_out = ''
-            xdd_file.close()
-            f.close()
+            if ID in transbasin:
+                with open ('./Experiment_files/cm2015B_S_uncurtailed.xdd', 'rt') as xdd_file:
+                    for line in xdd_file:
+                        data = line.split()
+                        if data:
+                            if data[0]==ID:
+                                if data[3]!='TOT':
+                                    for o in [2, 4, 17]:
+                                        line_out+=(data[o]+'\t')
+                                    f.write(line_out)
+                                    f.write('\n')
+                                    line_out = ''
+                xdd_file.close()
+                f.close()
+            else:
+                with open ('./cm2015B.xdd', 'rt') as xdd_file:
+                    for line in xdd_file:
+                        data = line.split()
+                        if data:
+                            if data[0]==ID:
+                                if data[3]!='TOT':
+                                    for o in [2, 4, 17]:
+                                        line_out+=(data[o]+'\t')
+                                    f.write(line_out)
+                                    f.write('\n')
+                                    line_out = ''
+                xdd_file.close()
+                f.close()
         except IOError:
             f.write('999999\t999999\t999999')
             f.close()
@@ -279,6 +295,7 @@ else:
     
 for i in range(start, stop):
     getinfo(all_IDs[i])
+    getinfo(transbasin[i])
     
 for i in range(start, stop):
 #    if all_IDs[i] in WDs:
@@ -292,14 +309,14 @@ for i in range(start, stop):
 #                    data= np.loadtxt('./Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '_' + str(r+1) + '.txt')[:,2]     
 #                synthetic[:,j,r]+=data
 #    else:
-    histData = np.loadtxt('./Infofiles_wide/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]
+    histData = np.loadtxt('./Infofiles_wide/' +  transbasin[i] + '/' + transbasin[i] + '_info_0.txt')[:,2]
     synthetic = np.zeros([len(histData), samples*realizations])
     for j in range(samples):
-        data= np.loadtxt('./Infofiles_wide/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_' + str(j+1) + '.txt') 
+        data= np.loadtxt('./Infofiles_wide/' +  transbasin[i] + '/' + transbasin[i] + '_info_' + str(j+1) + '.txt') 
         try:
             synthetic[:,j*realizations:j*realizations+realizations]=data[:,idx]
         except IndexError:
-            print(all_IDs[i] + '_info_' + str(j+1))
-    plotSDC(synthetic, histData, all_IDs[i])
+            print(transbasin[i] + '_info_' + str(j+1))
+    plotSDC(synthetic, histData, transbasin[i])
 
     
