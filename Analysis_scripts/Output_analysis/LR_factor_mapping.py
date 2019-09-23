@@ -22,7 +22,7 @@ param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
 
 irrigation_structures = np.genfromtxt('./Global_experiment_uncurtailed/irrigation.txt',dtype='str').tolist()
 TBDs = np.genfromtxt('./Global_experiment_uncurtailed/TBD.txt',dtype='str').tolist()
-all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures.txt',dtype='str').tolist()[:1]
+all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures.txt',dtype='str').tolist()
 nStructures = len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
@@ -136,11 +136,11 @@ def plotfailureheatmap(ID):
                 gridcells.append(0)
     
     fig, ax = plt.subplots()
-    im = ax.imshow(percentSOWs, norm = mpl.colors.Normalize(vmin=0.0,vmax=100.0), cmap='RdBu',interpolation='None')
-    for j in range(len(frequencies)):
-        for h in range(len(magnitudes)):
-            ax.text(h, j, int(percentSOWs[j,h]),
-                           ha="center", va="center", color="w")
+    im = ax.imshow(percentSOWs, norm = mpl.colors.Normalize(vmin=0.0,vmax=100.0), cmap='RdBu', interpolation='nearest')
+#    for j in range(len(frequencies)):
+#        for h in range(len(magnitudes)):
+#            ax.text(h, j, int(percentSOWs[j,h]),
+#                           ha="center", va="center", color="w")
     
     if ID=='7202003':
         ax.set_xticks(np.arange(len(streamdemand)))
@@ -174,7 +174,7 @@ def plotfailureheatmap(ID):
             highlight_cell(i,gridcells[i], color="orange", linewidth=4)
     
     fig.tight_layout()
-    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/Heatmaps/'+ID+'.png')
+    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/Heatmaps/'+ID+'.svg')
     plt.close()
     
     return(allSOWs)       

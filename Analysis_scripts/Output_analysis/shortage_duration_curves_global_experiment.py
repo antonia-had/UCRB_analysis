@@ -294,7 +294,6 @@ else:
 	stop = start + count
     
 for i in range(start, stop):
-    getinfo(all_IDs[i])
     getinfo(transbasin[i])
     
 for i in range(start, stop):
