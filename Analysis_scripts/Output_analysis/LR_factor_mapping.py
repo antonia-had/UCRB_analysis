@@ -185,7 +185,7 @@ def fitLogit(dta, predictors):
     # get columns of predictors
     cols = dta.columns.tolist()[-1:] + predictors 
     #fit logistic regression
-    logit = sm.Logit(dta['Success'], dta[cols])
+    logit = sm.Logit(dta['Success'], dta[cols], disp=False)
     result = logit.fit() 
     return result  
 
@@ -200,7 +200,7 @@ def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid
  
     z = result.predict(grid)
     Z = np.reshape(z, np.shape(X))
- 
+
     contourset = ax.contourf(X, Y, Z, levels, cmap=contour_cmap)
     ax.scatter(dta[xvar].values, dta[yvar].values, c=dta['Success'].values, edgecolor='none', cmap=dot_cmap)
     ax.set_xlim(0.99*np.min(X),1.01*np.max(X))
@@ -247,10 +247,13 @@ def factor_mapping(ID):
                     contour_levels = np.arange(0.0, 1.05,0.1)
                     # define base values of the predictors
                     base = SOW_values[top_predictors]
+                    ranges = param_bounds[top_predictors]
                     # define grid of x (1st predictor), and y (2nd predictor) dimensions
                     # to plot contour map over
-                    xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], 0.01)
-                    ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], 0.01)
+                    xgrid = np.arange(param_bounds[top_predictors[0]][0], 
+                                      param_bounds[top_predictors[0]][1], np.around((ranges[0][1]-ranges[0][0])/100,decimals=4))
+                    ygrid = np.arange(param_bounds[top_predictors[1]][0], 
+                                      param_bounds[top_predictors[1]][1], np.around((ranges[0][1]-ranges[0][0])/100,decimals=4))
                     all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
                     result = fitLogit(dta, [all_predictors[i] for i in [0,1]])
                     contourset = plotContourMap(axes, result, dta, contour_cmap, 
@@ -265,7 +268,7 @@ def factor_mapping(ID):
                     fig.suptitle('Probability of not having a '+ str(magnitudes[h]) +\
                                  ' shortage ' +  str(frequencies[j]) + '% of the time for '+ ID)
                     fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+\
-                                ID+'/'+str(frequencies[j])+'yrsw'+str(magnitudes[h])+'pcshortm.png')
+                                ID+'/'+str(frequencies[j])+'yrsw'+str(magnitudes[h])+'pcshortm.svg')
                     plt.close()
         all_pseudo_r_scores.to_csv('./Global_experiment_uncurtailed/Factor_mapping/'+ ID + '_pseudo_r_scores.csv', sep=",")                        
     elif ID=='7202003':
@@ -296,10 +299,11 @@ def factor_mapping(ID):
                     contour_levels = np.arange(0.0, 1.05,0.1)
                     # define base values of the predictors
                     base = SOW_values[top_predictors]
+                    ranges = param_bounds[top_predictors]
                     # define grid of x (1st predictor), and y (2nd predictor) dimensions
                     # to plot contour map over
-                    xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], 0.01)
-                    ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], 0.01)
+                    xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], np.around((ranges[0][1]-ranges[0][0])/100,decimals=4))
+                    ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], np.around((ranges[0][1]-ranges[0][0])/100,decimals=4))
                     all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
                     result = fitLogit(dta, [all_predictors[i] for i in [0,1]])
                     contourset = plotContourMap(axes, result, dta, contour_cmap, 
