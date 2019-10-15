@@ -3,7 +3,7 @@ Directory contents
 
 Input_simulation: Scripts for input generation and simulation of StateMod
 Old_data: Old compressed analysis data (not synced on GitHub)
-output: Any output files from submission scripts
+output: Any output files from submission scripts (not synced on GitHub)
 Output_analysis: Scripts for output extraction and analysis
 Qgen: Data and scripts necessary to generate XBM and IWR inputs for each experiment
 SALib: Python library for sensitivity analysis used by some experiments (not synced on GitHub)
