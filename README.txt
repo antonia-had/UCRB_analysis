@@ -17,6 +17,7 @@ LHsamples_narrowed_1000: Narrowed LHSample of 1000 SOW x 10 realizations for all
 LHsamples_original_1000: Original LHSample of 1000 SOW x 10 realizations for all uncertain factors
 LHsamples_original_1000_AnnQonly: Original LHSample of 1000 SOW x 10 realizations for only streamflow factors
 LHsamples_wider_1000: Wider (absurd) LHSample of 1000 SOW x 10 realizations for all uncertain factors
+LHsamples_wider_1000_AnnQonly: Wider (absurd) LHSample of 1000 SOW x 10 realizations for only streamflow factors
 
 	Each contains:
 	Experiment_files: StateMod input files necessary to run experiment
