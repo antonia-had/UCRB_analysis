@@ -4,53 +4,53 @@ import numpy as np
 from string import Template
 import os
 import pandas as pd
+import sys
 
 # =============================================================================
 # Experiment set up
 # =============================================================================
 
+design = str(sys.argv[1])
+
 # Read in SOW parameters
-LHsamples = np.loadtxt('./LHsamples_wider.txt') 
+LHsamples = np.loadtxt('../Qgen/' + design + '.txt') 
 nSamples = len(LHsamples[:,0])
 realizations = 10
 
 # Read/define relevant structures for each uncertainty
-reservoirs = np.genfromtxt('reservoirs.txt',dtype='str').tolist()
-transbasin = np.genfromtxt('TBD.txt',dtype='str').tolist()
-irrigation = np.genfromtxt('irrigation.txt',dtype='str').tolist()
-mun_ind = np.genfromtxt('M_I.txt',dtype='str').tolist()
+reservoirs = np.genfromtxt('../Structures_files/reservoirs.txt',dtype='str').tolist()
+transbasin = np.genfromtxt('../Structures_files/TBD.txt',dtype='str').tolist()
+irrigation = np.genfromtxt('../Structures_files/irrigation.txt',dtype='str').tolist()
+mun_ind = np.genfromtxt('../Structures_files/M_I.txt',dtype='str').tolist()
 env_flows = ['7202003']
 shoshone = ['5300584']
 
 # List IDs of structures of interest for output files
-IDs = np.genfromtxt('metrics_structures.txt',dtype='str').tolist()
+IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
 info_clmn = [2, 4, 17] # Define columns of aspect of interest 
 
 # =============================================================================
 # Load global information (applicable to all SOW)
 # =============================================================================
 # For RSP
-T = open('./Experiment_files/cm2015B_template.rsp', 'r')
+T = open('../'+design+'/Experiment_files/cm2015B_template.rsp', 'r')
 template_RSP = Template(T.read())
 
 # For DDM
 # split data on periods (splitting on spaces/tabs doesn't work because some columns are next to each other)
-with open('./Experiment_files/cm2015B.ddm','r') as f:
+with open('../'+design+'/Experiment_files/cm2015B.ddm','r') as f:
     all_split_data_DDM = [x.split('.') for x in f.readlines()]       
 f.close()        
 # get unsplit data to rewrite firstLine # of rows
-with open('./Experiment_files/cm2015B.ddm','r') as f:
+with open('../'+design+'/Experiment_files/cm2015B.ddm','r') as f:
     all_data_DDM = [x for x in f.readlines()]       
 f.close() 
 # Get historical irrigation rata 
-with open('./Experiment_files/cm2015B.iwr','r') as f:
+with open('../'+design+'/Experiment_files/cm2015B.iwr','r') as f:
     hist_IWR = [x.split() for x in f.readlines()[463:]]       
 f.close() 
+
 # Get uncurtailed demands
-#with open('./cm2015_export_max.stm','r') as f:
-#    diversions_uc = [x.split()[1:14] for x in f.readlines()[78:94]]       
-#f.close() 
-#uncurtailed = [x[0] for x in diversions_uc] # Get uncurtailed structures
 max_values = pd.DataFrame(np.zeros([6,13]),index=transbasin)
 for i in range(len(all_split_data_DDM)-779):
     row_data = []
@@ -69,13 +69,13 @@ for index, row in max_values.iterrows():
 
 # For RES
 # get unsplit data to rewrite everything that's unchanged
-with open('./Experiment_files/cm2015B.res','r') as f:
+with open('../'+design+'/Experiment_files/cm2015B.res','r') as f:
     all_data_RES = [x for x in f.readlines()]       
 f.close() 
 
 # For DDR
 # get unsplit data to rewrite everything that's unchanged
-with open('./Experiment_files/cm2015B.ddr','r') as f:
+with open('../'+design+'/Experiment_files/cm2015B.ddr','r') as f:
     all_data_DDR = [x for x in f.readlines()]       
 f.close() 
 column_lengths=[12,24,12,16,8,8]
@@ -87,11 +87,11 @@ for i in range(1,len(column_lengths)):
 
 # For EVA
 # split data on periods
-with open('./Experiment_files/cm2015.eva','r') as f:
+with open('../'+design+'/Experiment_files/cm2015.eva','r') as f:
     all_split_data_EVA = [x.split() for x in f.readlines()]    
 f.close() 
 # get unsplit data to rewrite firstLine # of rows
-with open('./Experiment_files/cm2015.eva','r') as f:
+with open('../'+design+'/Experiment_files/cm2015.eva','r') as f:
     all_data_EVA = [x for x in f.readlines()]
 f.close()
 
@@ -104,7 +104,7 @@ def writenewDDM(structures, firstLine, k, l):
     allstructures = []
     for m in range(len(structures)):
         allstructures.extend(structures[m])
-    with open('./Experiment_files/cm2015B_S'+ str(k+1) + '_' + str(l+1) + 'a.iwr') as f:
+    with open('../'+design+'/Experiment_files/cm2015B_S'+ str(k+1) + '_' + str(l+1) + 'a.iwr') as f:
         sample_IWR = [x.split() for x in f.readlines()[463:]]       
     f.close() 
     new_data = []
@@ -156,7 +156,7 @@ def writenewDDM(structures, firstLine, k, l):
         # append row of adjusted data
         new_data.append(row_data)                
     # write new data to file
-    f = open('./Experiment_files/'+ 'cm2015B.ddm'[0:-4] + '_S' + str(k+1) + '_' + str(l+1) + 'cm2015B.ddm'[-4::],'w')
+    f = open('../'+design+'/Experiment_files/'+ 'cm2015B.ddm'[0:-4] + '_S' + str(k+1) + '_' + str(l+1) + 'cm2015B.ddm'[-4::],'w')
     # write firstLine # of rows as in initial file
     for i in range(firstLine):
         f.write(all_data_DDM[i])            
@@ -181,7 +181,7 @@ def writenewRES(lines, k):
         split_line[1] = ' ' + str(int(float(split_line[1])*LHsamples[k,1]))
         copy_all_data_RES[lines[j]]=".".join(split_line)                
     # write new data to file
-    f = open('./Experiment_files/'+ 'cm2015B.res'[0:-4] + '_S' + str(k+1) + 'cm2015B.res'[-4::],'w')
+    f = open('../'+design+'/Experiment_files/'+ 'cm2015B.res'[0:-4] + '_S' + str(k+1) + 'cm2015B.res'[-4::],'w')
     for i in range(len(copy_all_data_RES)):
         f.write(copy_all_data_RES[i])
     f.close()
@@ -202,7 +202,7 @@ def writenewDDR(lines, k):
             split_line[4] = (column_lengths[4]-len(str(405.83)))*' '+str(405.83)
             copy_all_data[lines[j]]="".join(split_line)+'\n'                
     # write new data to file
-    f = open('./Experiment_files/'+ 'cm2015B.ddr'[0:-4] + '_S' + str(k+1) + 'cm2015B.ddr'[-4::],'w')
+    f = open('../'+design+'/Experiment_files/'+ 'cm2015B.ddr'[0:-4] + '_S' + str(k+1) + 'cm2015B.ddr'[-4::],'w')
     for i in range(len(copy_all_data)):
         f.write(copy_all_data[i])
     f.close()
@@ -221,7 +221,7 @@ def writenewEVA(k):
         # append row of adjusted data
         new_data.append(row_data)            
     # write new data to file
-    f = open('./Experiment_files/cm2015_S' + str(k+1) + '.eva','w')
+    f = open('../'+design+'/Experiment_files/cm2015_S' + str(k+1) + '.eva','w')
     # write firstLine # of rows as in initial file
     for i in range(35):
         f.write(all_data_EVA[i])        
@@ -276,11 +276,11 @@ for k in range(start, stop):
         d['EVA'] = 'cm2015_S' + str(k+1) + '.eva'
         d['RES'] = 'cm2015B_S' + str(k+1) + '.res'
         S1 = template_RSP.safe_substitute(d)
-        f1 = open('./Experiment_files/cm2015B_S' + str(k+1) + '_' + str(j+1) + '.rsp', 'w')
+        f1 = open('../'+design+'/Experiment_files/cm2015B_S' + str(k+1) + '_' + str(j+1) + '.rsp', 'w')
         f1.write(S1)    
         f1.close()
         writenewDDM([irrigation, transbasin, mun_ind, shoshone], 779, k, j)
         writenewRES([395,348,422,290,580,621], k)
         writenewDDR([2019,2020,2021], k)
         writenewEVA(k)
-        os.system("./Experiment_files/statemod Experiment_files/cm2015B_S{}_{} -simulate".format(k+1,j+1))
+        os.system("../"+design+"/Experiment_files/statemod Experiment_files/cm2015B_S{}_{} -simulate".format(k+1,j+1))
