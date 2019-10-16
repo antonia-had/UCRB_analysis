@@ -1,0 +1,14 @@
+To replicate analysis of paper 1 (UCRB user vulnerabilities)
+============================================================
+
+Assuming you have:
+------------------
+1. StateMod
+2. LHsamples_original_1000.txt in Qgen folder
+3. StateMod simlink to original
+4. Generated XBM and IWR StateMod files for UCRB
+
+
+Steps:
+------
+1. Generate all other necessary experiment files and submit runs

@@ -44,40 +44,27 @@ CMIP5_flows = np.reshape(CMIP5_flows, [97, 64,12])
 baseCase = np.load('../Summary_info/Sample1_Flows_logspace.npy')[:,-1,:]
 
 # Load synthetic nonstationary runs
-synthetic_flows = np.zeros([10000, len(years),12])
-for s in range(1000):
-    for k in range(10):       
-        synthetic_file = open('../' + design + '/Experiment_files/cm2015x_S'+str(s+1)+'_'+str(k+1)+'.xbm', 'r')
-        all_split_data = [x.split('.') for x in synthetic_file.readlines()]
-        yearcount = 0
-        for i in range(16, len(all_split_data)):
-            row_data = []
-            row_data.extend(all_split_data[i][0].split())
-            if row_data[1] == '09163500':
-                data_to_write = [row_data[2]]+all_split_data[i][1:12]
-                synthetic_flows[s*10+k,yearcount,:] = [int(j) for j in data_to_write]
-                yearcount+=1
+#synthetic_flows = np.zeros([10000, len(years),12])
+#for s in range(1000):
+#    for k in range(10):       
+#        synthetic_file = open('../' + design + '/Experiment_files/cm2015x_S'+str(s+1)+'_'+str(k+1)+'.xbm', 'r')
+#        all_split_data = [x.split('.') for x in synthetic_file.readlines()]
+#        yearcount = 0
+#        for i in range(16, len(all_split_data)):
+#            row_data = []
+#            row_data.extend(all_split_data[i][0].split())
+#            if row_data[1] == '09163500':
+#                data_to_write = [row_data[2]]+all_split_data[i][1:12]
+#                synthetic_flows[s*10+k,yearcount,:] = [int(j) for j in data_to_write]
+#                yearcount+=1
             
-#synthetic_flows = np.delete(synthetic_flows,75,1)
-np.save('../Summary_info/'+design+'_flows.npy', synthetic_flows)
+#np.save('../Summary_info/'+design+'_flows.npy', synthetic_flows)
 
-#synthetic_flows = np.load('syntheticflows.npy')
-
+synthetic_flows = np.load('../Summary_info/'+design+'_flows.npy')
 
 colors = ['#AA1209','#DD7373', '#305252', '#3C787E','#D0CD94', '#9597a3']
 labels=['Paleo', 'Historic', 'Stationary synthetic', 'CMIP3', 'CMIP5', 'This experiment']
 data = [Paleo['ScaledReconCisco'][:429].values, np.sum(historic_data, axis=1), np.sum(baseCase, axis=1), np.sum(CMIP3_flows, axis=2), np.sum(CMIP5_flows, axis=2), np.sum(synthetic_flows, axis=2)]
-fig = plt.figure()
-ax = fig.add_subplot(111)
-boxplots=ax.boxplot(data, patch_artist=True, labels=labels, whis = 5, boxprops = dict(linestyle='--', color='Black'))
-for i in range(len(boxplots['boxes'])):
-    bp = boxplots['boxes'][i]
-    bp.set_facecolor(colors[i])
-#ax.set_yscale( "log" )
-ax.set_ylabel('Flow at Last Node (af)',fontsize=20)
-ax.set_yticklabels(['{:,}'.format(int(x)) for x in ax.get_yticks().tolist()],fontsize=16)
-ax.set_xticklabels(labels,fontsize=16)
-plt.savefig('../Summary_info/streamflow_boxplot_'+design+'.svg')
 
 fig = plt.figure(figsize=(18,9))
 ax = fig.add_subplot(111)
@@ -90,10 +77,27 @@ for i in range(len(violinplots['bodies'])):
     vp.set_facecolor(colors[i])
     vp.set_edgecolor('black')
     vp.set_alpha(1)
-#ax.set_yscale( "log" )
 ax.set_ylabel('Flow at Last Node (af)',fontsize=20)
 ax.set_xticks(np.arange(1,7))
 ax.set_xticklabels(labels,fontsize=16)
 ax.set_yticklabels(['{:,}'.format(int(x)) for x in ax.get_yticks().tolist()],fontsize=16)
 plt.savefig('../Summary_info/streamflow_violinplot_'+design+'.svg')
+
+fig = plt.figure(figsize=(18,9))
+ax = fig.add_subplot(111)
+violinplots=ax.violinplot(data, vert=True)
+violinplots['cbars'].set_edgecolor('black')
+violinplots['cmins'].set_edgecolor('black')
+violinplots['cmaxes'].set_edgecolor('black')
+for i in range(len(violinplots['bodies'])):
+    vp = violinplots['bodies'][i]
+    vp.set_facecolor(colors[i])
+    vp.set_edgecolor('black')
+    vp.set_alpha(1)
+ax.set_yscale( "log" )
+ax.set_ylabel('Flow at Last Node (af)',fontsize=20)
+ax.set_xticks(np.arange(1,7))
+ax.set_xticklabels(labels,fontsize=16)
+ax.set_yticklabels(['{:,}'.format(int(x)) for x in ax.get_yticks().tolist()],fontsize=16)
+plt.savefig('../Summary_info/streamflow_violinplot_'+design+'_log.svg')
 
