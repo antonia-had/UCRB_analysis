@@ -5,9 +5,9 @@
 #SBATCH --export=ALL
 #SBATCH -t 0:45:00            # set max wallclock time
 #SBATCH --job-name="statemod" # name your job 
-#SBATCH --output="output/output.out"
+#SBATCH --output="../output/statemodruns.out"
 
 module load python
 module load mpi4py
 module load scipy
-ibrun python input_statemod_uncurtailed.py
+ibrun python input_statemod_uncurtailed.py LHsamples_original_1000

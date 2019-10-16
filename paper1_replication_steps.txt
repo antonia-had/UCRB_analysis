@@ -11,4 +11,4 @@ Assuming you have:
 
 Steps:
 ------
-1. Generate all other necessary experiment files and submit runs
+1. Generate all other necessary experiment files and submit runs using input_statemod_uncurtailed.py and .sh
