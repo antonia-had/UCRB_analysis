@@ -25,57 +25,54 @@ mun_ind = np.genfromtxt('../Structures_files/M_I.txt',dtype='str').tolist()
 env_flows = ['7202003']
 shoshone = ['5300584']
 
-# List IDs of structures of interest for output files
-IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
-info_clmn = [2, 4, 17] # Define columns of aspect of interest 
-
 # =============================================================================
 # Load global information (applicable to all SOW)
 # =============================================================================
 # For RSP
-T = open('../'+design+'/Experiment_files/cm2015B_template.rsp', 'r')
+T = open('../Statemod_files/cm2015B_template.rsp', 'r')
 template_RSP = Template(T.read())
 
 # For DDM
 # split data on periods (splitting on spaces/tabs doesn't work because some columns are next to each other)
-with open('../'+design+'/Experiment_files/cm2015B.ddm','r') as f:
+with open('../Statemod_files/cm2015B.ddm','r') as f:
     all_split_data_DDM = [x.split('.') for x in f.readlines()]       
 f.close()        
 # get unsplit data to rewrite firstLine # of rows
-with open('../'+design+'/Experiment_files/cm2015B.ddm','r') as f:
+with open('../Statemod_files/cm2015B.ddm','r') as f:
     all_data_DDM = [x for x in f.readlines()]       
 f.close() 
 # Get historical irrigation rata 
-with open('../'+design+'/Experiment_files/cm2015B.iwr','r') as f:
+with open('../Statemod_files/cm2015B.iwr','r') as f:
     hist_IWR = [x.split() for x in f.readlines()[463:]]       
 f.close() 
 
 # Get uncurtailed demands
-max_values = pd.DataFrame(np.zeros([6,13]),index=transbasin)
-for i in range(len(all_split_data_DDM)-779):
-    row_data = []
-    row_data.extend(all_split_data_DDM[i+779][0].split())
-    if row_data[1] in transbasin:
-        current_values = max_values.loc[row_data[1]].values
-        if float(row_data[2])>current_values[0]:
-            current_values[0] = float(row_data[2])
-        for j in range(len(all_split_data_DDM[i+779])-3):
-            if float(all_split_data_DDM[i+779][j+1])>current_values[j+1]:
-                current_values[j+1]=float(all_split_data_DDM[i+779][j+1])
-        max_values.loc[row_data[1]]=current_values
+#max_values = pd.DataFrame(np.zeros([6,13]),index=transbasin)
+#for i in range(len(all_split_data_DDM)-779):
+#    row_data = []
+#    row_data.extend(all_split_data_DDM[i+779][0].split())
+#    if row_data[1] in transbasin:
+#        current_values = max_values.loc[row_data[1]].values
+#        if float(row_data[2])>current_values[0]:
+#            current_values[0] = float(row_data[2])
+#        for j in range(len(all_split_data_DDM[i+779])-3):
+#            if float(all_split_data_DDM[i+779][j+1])>current_values[j+1]:
+#                current_values[j+1]=float(all_split_data_DDM[i+779][j+1])
+#        max_values.loc[row_data[1]]=current_values
+#for index, row in max_values.iterrows():
+#    row[12] = row.values[:-1].sum()
 
-for index, row in max_values.iterrows():
-    row[12] = row.values[:-1].sum()
+max_values = pd.read_csv('../Statemod_files/maxvalues.csv', index_col=0)
 
 # For RES
 # get unsplit data to rewrite everything that's unchanged
-with open('../'+design+'/Experiment_files/cm2015B.res','r') as f:
+with open('../Statemod_files/cm2015B.res','r') as f:
     all_data_RES = [x for x in f.readlines()]       
 f.close() 
 
 # For DDR
 # get unsplit data to rewrite everything that's unchanged
-with open('../'+design+'/Experiment_files/cm2015B.ddr','r') as f:
+with open('../Statemod_files/cm2015B.ddr','r') as f:
     all_data_DDR = [x for x in f.readlines()]       
 f.close() 
 column_lengths=[12,24,12,16,8,8]
@@ -87,11 +84,11 @@ for i in range(1,len(column_lengths)):
 
 # For EVA
 # split data on periods
-with open('../'+design+'/Experiment_files/cm2015.eva','r') as f:
+with open('../Statemod_files/cm2015.eva','r') as f:
     all_split_data_EVA = [x.split() for x in f.readlines()]    
 f.close() 
 # get unsplit data to rewrite firstLine # of rows
-with open('../'+design+'/Experiment_files/cm2015.eva','r') as f:
+with open('../Statemod_files/cm2015.eva','r') as f:
     all_data_EVA = [x for x in f.readlines()]
 f.close()
 
@@ -283,4 +280,8 @@ for k in range(start, stop):
         writenewRES([395,348,422,290,580,621], k)
         writenewDDR([2019,2020,2021], k)
         writenewEVA(k)
-        os.system("../"+design+"/Experiment_files/statemod Experiment_files/cm2015B_S{}_{} -simulate".format(k+1,j+1))
+        
+os.chdir("../"+design+"/Experiment_files")
+for k in range(start, stop):
+    for j in range(realizations): 
+        os.system("./statemod cm2015B_S{}_{} -simulate".format(k+1,j+1))
