@@ -1,13 +1,14 @@
 from mpi4py import MPI
 import math
 import numpy as np
+import sys
 
 # =============================================================================
 # Experiment set up
 # =============================================================================
+design = str(sys.argv[1])
 
-# Read in SOW parameters
-LHsamples = np.loadtxt('./LHsamples_wider.txt') 
+LHsamples = np.loadtxt('../Qgen/' + design + '.txt') 
 realizations = 10
 
 # Read/define relevant structures for each uncertainty
@@ -18,8 +19,8 @@ ID = '7202003'
 # =============================================================================
 
 lines=[]
-with open ('./Infofiles_wide/' +  ID + '/' + ID + '_streamflow_0.txt','w') as f:
-    with open ('./cm2015B.xdd', 'rt') as xdd_file:
+with open ('../'+design+'/Infofiles/' +  ID + '/' + ID + '_streamflow_0.txt','w') as f:
+    with open ('../'+design+'/Experiment_files/cm2015B_uncurt.xdd', 'rt') as xdd_file:
         for line in xdd_file.readlines()[39:]:
                 data = line.split('.')
                 if len(data)>1:
@@ -36,8 +37,8 @@ f.close()
 
 def getinfo(s):
     lines=[]
-    with open ('./Infofiles_wide/' +  ID + '/' + ID + '_streamflow_' + str(s+1) +'.txt','w') as f:
-        with open ('./Experiment_files/cm2015B_S'+ str(s+1)+ '_1.xdd', 'rt') as xdd_file:
+    with open ('../'+design+'/Infofiles/' +  ID + '/' + ID + '_streamflow_' + str(s+1) +'.txt','w') as f:
+        with open ('../'+design+'/Experiment_files/cm2015B_S'+ str(s+1)+ '_1.xdd', 'rt') as xdd_file:
             test = xdd_file.readline()
             if test:
                 for line in xdd_file.readlines()[39:]:
@@ -51,7 +52,7 @@ def getinfo(s):
         for j in range(1, realizations):
             count=0
             try:
-                with open ('./Experiment_files/cm2015B_S'+ str(s+1)+ '_' + str(j+1) + '.xdd', 'rt') as xdd_file:
+                with open ('../'+design+'/Experiment_files/cm2015B_S'+ str(s+1)+ '_' + str(j+1) + '.xdd', 'rt') as xdd_file:
                     test = xdd_file.readline()
                     if test:
                         for line in xdd_file.readlines()[39:]:

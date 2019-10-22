@@ -2,48 +2,51 @@ import numpy as np
 from string import Template
 import os
 import pandas as pd
+import sys
+
 
 # =============================================================================
 # Experiment set up
 # =============================================================================
+design = str(sys.argv[1])
 
 # Read/define relevant structures for each uncertainty
-transbasin = np.genfromtxt('TBD.txt',dtype='str').tolist()
+transbasin = np.genfromtxt('../Structures_files/TBD.txt',dtype='str').tolist()
 
 # =============================================================================
 # Load global information (applicable to all SOW)
 # =============================================================================
 # For RSP
-T = open('./Experiment_files/cm2015B_template.rsp', 'r')
+T = open('../Statemod_files/cm2015B_template.rsp', 'r')
 template_RSP = Template(T.read())
 
 # For DDM
 # split data on periods (splitting on spaces/tabs doesn't work because some columns are next to each other)
-with open('./Experiment_files/cm2015B.ddm','r') as f:
+with open('../Statemod_files/cm2015B.ddm','r') as f:
     all_split_data_DDM = [x.split('.') for x in f.readlines()]   
 f.close()   
-with open('./Experiment_files/cm2015B.ddm','r') as f:
+with open('../Statemod_files/cm2015B.ddm','r') as f:
     # get unsplit data to rewrite firstLine # of rows
     all_data_DDM = [x for x in f.readlines()]         
 f.close() 
 # Get uncurtailed demands
-max_values = pd.DataFrame(np.zeros([6,13]),index=transbasin)
-for i in range(len(all_split_data_DDM)-779):
-    row_data = []
-    row_data.extend(all_split_data_DDM[i+779][0].split())
-    if row_data[1] in transbasin:
-        current_values = max_values.loc[row_data[1]].values
-        if float(row_data[2])>current_values[0]:
-            current_values[0] = float(row_data[2])
-        for j in range(len(all_split_data_DDM[i+779])-3):
-            if float(all_split_data_DDM[i+779][j+1])>current_values[j+1]:
-                current_values[j+1]=float(all_split_data_DDM[i+779][j+1])
-        max_values.loc[row_data[1]]=current_values
-
-for index, row in max_values.iterrows():
-    row[12] = row.values[:-1].sum()
-    
-max_values.to_csv('maxvalues.csv')
+#max_values = pd.DataFrame(np.zeros([6,13]),index=transbasin)
+#for i in range(len(all_split_data_DDM)-779):
+#    row_data = []
+#    row_data.extend(all_split_data_DDM[i+779][0].split())
+#    if row_data[1] in transbasin:
+#        current_values = max_values.loc[row_data[1]].values
+#        if float(row_data[2])>current_values[0]:
+#            current_values[0] = float(row_data[2])
+#        for j in range(len(all_split_data_DDM[i+779])-3):
+#            if float(all_split_data_DDM[i+779][j+1])>current_values[j+1]:
+#                current_values[j+1]=float(all_split_data_DDM[i+779][j+1])
+#        max_values.loc[row_data[1]]=current_values
+#
+#for index, row in max_values.iterrows():
+#    row[12] = row.values[:-1].sum()  
+#max_values.to_csv('maxvalues.csv')
+max_values = pd.read_csv('../Statemod_files/maxvalues.csv', index_col=0)
 
 # =============================================================================
 # Define functions that generate each type of input file 
@@ -69,7 +72,7 @@ def writenewDDM(structures, firstLine):
         # append row of adjusted data
         new_data.append(row_data)                
     # write new data to file
-    f = open('./Experiment_files/'+ 'cm2015B.ddm'[0:-4] + '_uncurt' + 'cm2015B.ddm'[-4::],'w')
+    f = open('../'+design+'/Experiment_files/'+ 'cm2015B.ddm'[0:-4] + '_uncurt' + 'cm2015B.ddm'[-4::],'w')
     # write firstLine # of rows as in initial file
     for i in range(firstLine):
         f.write(all_data_DDM[i])            
@@ -93,8 +96,9 @@ d['DDM'] = 'cm2015B_uncurt.ddm'
 d['EVA'] = 'cm2015.eva'
 d['RES'] = 'cm2015B.res'
 S1 = template_RSP.safe_substitute(d)
-f1 = open('./Experiment_files/cm2015B_uncurt.rsp', 'w')
+f1 = open('../'+design+'/Experiment_files/cm2015B_uncurt.rsp', 'w')
 f1.write(S1)    
 f1.close()
 writenewDDM(transbasin, 779)
-#os.system("./Experiment_files/statemod .Experiment_files/cm2015B_uncurt -simulate")
+os.chdir("../"+design+"/Experiment_files")
+os.system("./statemod cm2015B_uncurt -simulate")

@@ -4,10 +4,10 @@
 #SBATCH --ntasks-per-node=24  # specify number of core per node
 #SBATCH --export=ALL
 #SBATCH -t 1:00:00            # set max wallclock time
-#SBATCH --job-name="statemod" # name your job 
-#SBATCH --output="output/streamflow.out"
+#SBATCH --job-name="curves" # name your job
+#SBATCH --output="../output/curves.out"
 
 module load python
 module load mpi4py
 module load scipy
-ibrun python 15mile_streamflow.py
+ibrun python shortage_duration_curves.py LHsamples_original_1000

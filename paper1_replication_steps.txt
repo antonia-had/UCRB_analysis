@@ -1,4 +1,4 @@
-To replicate analysis of paper 1 (UCRB user vulnerabilities)
+To replicate analysis of paper 1 and 2 (UCRB user vulnerabilities)
 ============================================================
 
 Assuming you have:
@@ -12,4 +12,9 @@ Assuming you have:
 Steps:
 ------
 1. Generate all other necessary experiment files and submit runs using input_statemod_uncurtailed.py and .sh
-2. Extract all relevant outputs
+2. Extract all relevant outputs using infofile_uncurtailed.py and .sh
+3. Simulate uncurtailement demands and shortages for TBD using input_statemod_uncurtailment_only.py
+4. Run sensitivity analysis for both magnitude and duration of shortage using sensitivity_analysis.py and .sh
+5. Generate shortage duration curves and sensitivity analysis curves using shortage_duration_curves.py and .sh
+6. Get streamflows for 15-mile reach (needed for robustness analysis) using 15mile_streamflow.py and .sh
+7. Perform scenario discovery using LR_factor_mapping.py and .sh

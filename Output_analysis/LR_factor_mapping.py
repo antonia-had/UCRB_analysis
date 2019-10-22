@@ -9,20 +9,23 @@ from mpi4py import MPI
 import math
 import os
 plt.ioff()
+import sys
 
-LHsamples = np.loadtxt('./Global_experiment_uncurtailed/LHsamples_wider.txt') 
+# =============================================================================
+# Experiment set up
+# =============================================================================
+design = str(sys.argv[1])
+
+LHsamples = np.loadtxt('../Qgen/' + design + '.txt')  
 realizations = 10
-param_bounds=np.loadtxt('./Global_experiment_uncurtailed/uncertain_params_wider.txt', usecols=(1,2))
+param_bounds=np.loadtxt('../Qgen/uncertain_params_'+design[10:-5]+'.txt', usecols=(1,2))
 SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values for base SOW
 params_no = len(LHsamples[0,:])
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
 
-
-irrigation_structures = np.genfromtxt('./Global_experiment_uncurtailed/irrigation.txt',dtype='str').tolist()
-TBDs = np.genfromtxt('./Global_experiment_uncurtailed/TBD.txt',dtype='str').tolist()
-all_IDs = np.genfromtxt('./Global_experiment_uncurtailed/metrics_structures.txt',dtype='str').tolist()
+all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
 nStructures = len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
@@ -54,11 +57,11 @@ def plotfailureheatmap(ID):
         streamflow = np.zeros([nMonths,len(LHsamples[:,0])*realizations])
         
         for j in range(len(LHsamples[:,0])):
-            data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +\
+            data= np.loadtxt('../'+design+'/Infofiles/' +\
                              ID + '/' + ID + '_streamflow_' + str(j+1) + '.txt')[:,1:]
             streamflow[:,j*realizations:j*realizations+realizations]=data
         
-        streamflowhistoric = np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +\
+        streamflowhistoric = np.loadtxt('../'+design+'/Infofiles/' +\
                                         ID + '/' + ID + '_streamflow_0.txt')[:,1]
         
         historic_percents = [100-scipy.stats.percentileofscore(streamflowhistoric, dem, kind='strict') for dem in streamdemand]
@@ -82,7 +85,7 @@ def plotfailureheatmap(ID):
                 gridcells.append(0)
         
     else:                     
-        data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +  ID + '/' + ID + '_info_0.txt')
+        data= np.loadtxt('../'+design+'/Infofiles/' +  ID + '/' + ID + '_info_0.txt')
         historic_demands = data[:,1]
         historic_shortages = data[:,2]
         #reshape into water years
@@ -100,7 +103,7 @@ def plotfailureheatmap(ID):
         shortages = np.zeros([nMonths,len(LHsamples[:,0])*realizations])
         demands = np.zeros([nMonths,len(LHsamples[:,0])*realizations])
         for j in range(len(LHsamples[:,0])):
-            data= np.loadtxt('./Global_experiment_uncurtailed/Infofiles_wide/' +  ID + '/' + ID + '_info_' + str(j+1) + '.txt')
+            data= np.loadtxt('../'+design+'/Infofiles/' +  ID + '/' + ID + '_info_' + str(j+1) + '.txt')
             try:
                 demands[:,j*realizations:j*realizations+realizations]=data[:,idx_demand]
                 shortages[:,j*realizations:j*realizations+realizations]=data[:,idx_shortage]
@@ -174,7 +177,7 @@ def plotfailureheatmap(ID):
             highlight_cell(i,gridcells[i], color="orange", linewidth=4)
     
     fig.tight_layout()
-    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/Heatmaps/'+ID+'.svg')
+    fig.savefig('../'+design+'/Factor_mapping/Heatmaps/'+ID+'.svg')
     plt.close()
     
     return(allSOWs)       
@@ -217,8 +220,8 @@ def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid
 
 def factor_mapping(ID):
     allSOWsperformance = plotfailureheatmap(ID)/100
-    if not os.path.exists('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+ ID):
-        os.makedirs('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+ ID)
+    if not os.path.exists('../'+design+'/Factor_mapping/LR_contours/'+ ID):
+        os.makedirs('../'+design+'/Factor_mapping/LR_contours/'+ ID)
     if ID!='7202003':
         all_pseudo_r_scores = pd.DataFrame()
         for j in range(len(frequencies)):
@@ -267,10 +270,10 @@ def factor_mapping(ID):
                     fig.set_size_inches([14.5,8])
                     fig.suptitle('Probability of not having a '+ str(magnitudes[h]) +\
                                  ' shortage ' +  str(frequencies[j]) + '% of the time for '+ ID)
-                    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+\
+                    fig.savefig('../'+design+'/Factor_mapping/LR_contours/'+\
                                 ID+'/'+str(frequencies[j])+'yrsw'+str(magnitudes[h])+'pcshortm.svg')
                     plt.close()
-        all_pseudo_r_scores.to_csv('./Global_experiment_uncurtailed/Factor_mapping/'+ ID + '_pseudo_r_scores.csv', sep=",")                        
+        all_pseudo_r_scores.to_csv('../'+design+'/Factor_mapping/'+ ID + '_pseudo_r_scores.csv', sep=",")                        
     elif ID=='7202003':
         all_pseudo_r_scores = pd.DataFrame()
         for j in range(len(frequencies)):
@@ -317,12 +320,12 @@ def factor_mapping(ID):
                     fig.set_size_inches([14.5,8])
                     fig.suptitle('Probability of not having a '+ str(int(streamdemand[h]/60.3707)) +\
                                  ' cf/s flow ' +  str(frequencies[::-1][j]) + '% of the time for '+ ID)
-                    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+\
+                    fig.savefig('../'+design+'/Factor_mapping/LR_contours/'+\
                                 ID+'/'+str(frequencies[::-1][j])+'yrsw'+str(int(streamdemand[h]/60.3707))+'pcshortm.png')
-                    fig.savefig('./Global_experiment_uncurtailed/Factor_mapping/LR_contours/'+\
+                    fig.savefig('../'+design+'/Factor_mapping/LR_contours/'+\
                                 ID+'/'+str(frequencies[::-1][j])+'yrsw'+str(int(streamdemand[h]/60.3707))+'pcshortm.svg')                    
                     plt.close()
-        all_pseudo_r_scores.to_csv('./Global_experiment_uncurtailed/Factor_mapping/'+ ID + '_pseudo_r_scores.csv', sep=",")                        
+        all_pseudo_r_scores.to_csv('../'+design+'/Factor_mapping/'+ ID + '_pseudo_r_scores.csv', sep=",")                        
         
 
     
