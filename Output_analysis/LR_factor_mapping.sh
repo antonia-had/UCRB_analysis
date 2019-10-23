@@ -3,7 +3,7 @@
 #SBATCH --nodes=15 
 #SBATCH --ntasks-per-node=24
 #SBATCH --export=ALL
-#SBATCH -t 0:30:00
+#SBATCH -t 1:30:00
 #SBATCH --job-name="LR"
 #SBATCH --output="../output/outputLR.out"
 

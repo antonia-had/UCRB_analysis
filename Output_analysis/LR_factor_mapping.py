@@ -180,7 +180,7 @@ def plotfailureheatmap(ID):
     fig.savefig('../'+design+'/Factor_mapping/Heatmaps/'+ID+'.svg')
     plt.close()
     
-    return(allSOWs)       
+    return(allSOWs, historic_percents)       
 
 def fitLogit(dta, predictors):
     # concatenate intercept column of 1s
@@ -219,7 +219,10 @@ def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid
 #    return shrt_dur
 
 def factor_mapping(ID):
-    allSOWsperformance = plotfailureheatmap(ID)/100
+    allSOWsperformance = plotfailureheatmap(ID)[0]/100
+    historic_percents = plotfailureheatmap(ID)[1]
+    historic_percents = [roundup(x) for x in historic_percents]
+    dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
     if not os.path.exists('../'+design+'/Factor_mapping/LR_contours/'+ ID):
         os.makedirs('../'+design+'/Factor_mapping/LR_contours/'+ ID)
     if ID!='7202003':
@@ -228,7 +231,6 @@ def factor_mapping(ID):
             for h in range(len(magnitudes)):
                 pseudo_r_scores = np.zeros(params_no)
                 # Logistic regression analysis
-                dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
                 dta['Success']=allSOWsperformance[j,h,:]
                 for m in range(params_no):
                     predictors = dta.columns.tolist()[m:(m+1)]
@@ -238,6 +240,11 @@ def factor_mapping(ID):
                     except: 
                         pseudo_r_scores[m]=pseudo_r_scores[m]
                 all_pseudo_r_scores[str(frequencies[j])+'yrs_'+str(magnitudes[h])+'prc']=pseudo_r_scores
+        all_pseudo_r_scores.to_csv('../'+design+'/Factor_mapping/'+ ID + '_pseudo_r_scores.csv', sep=",")
+        for h in range(len(magnitudes)):
+            if historic_percents[h]!=0:
+                dta['Success']=allSOWsperformance[list(frequencies).index(historic_percents[h]),h,:]
+                pseudo_r_scores = all_pseudo_r_scores[str(int(historic_percents[h]))+'yrs_'+str(magnitudes[h])+'prc'].values
                 if pseudo_r_scores.any():
                     fig, axes = plt.subplots(1,1)
                     top_predictors = np.argsort(pseudo_r_scores)[::-1][:2] #Sort scores and pick top 2 predictors
@@ -271,9 +278,9 @@ def factor_mapping(ID):
                     fig.suptitle('Probability of not having a '+ str(magnitudes[h]) +\
                                  ' shortage ' +  str(frequencies[j]) + '% of the time for '+ ID)
                     fig.savefig('../'+design+'/Factor_mapping/LR_contours/'+\
-                                ID+'/'+str(frequencies[j])+'yrsw'+str(magnitudes[h])+'pcshortm.svg')
+                                ID+'/'+str(int(historic_percents[h]))+'yrsw'+str(magnitudes[h])+'pcshortm.svg')
                     plt.close()
-        all_pseudo_r_scores.to_csv('../'+design+'/Factor_mapping/'+ ID + '_pseudo_r_scores.csv', sep=",")                        
+                        
     elif ID=='7202003':
         all_pseudo_r_scores = pd.DataFrame()
         for j in range(len(frequencies)):
