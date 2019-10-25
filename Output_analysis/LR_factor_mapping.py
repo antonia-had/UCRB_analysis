@@ -41,7 +41,7 @@ idx_demand = np.arange(1,21,2)
 # Set arrays for shortage frequencies and magnitudes
 frequencies = np.arange(10, 110, 10)
 magnitudes = np.arange(10, 110, 10)
-streamdemand = np.arange(810*60.3707*0.5, 810*60.3707*1.5, 810*60.3707/10)[::-1]
+streamdemand = np.array([1950, 1750, 1630, 1450, 1240, 1150, 950, 810, 650, 500])*60.3707
 
 def roundup(x):
     return int(math.ceil(x / 10.0)) * 10
@@ -180,6 +180,8 @@ def plotfailureheatmap(ID):
     fig.savefig('../'+design+'/Factor_mapping/Heatmaps/'+ID+'.svg')
     plt.close()
     
+    np.save('../../'+design+'/Factor_mapping/'+ ID + '_heatmap.npy',allSOWs)
+    
     return(allSOWs, historic_percents)       
 
 def fitLogit(dta, predictors):
@@ -263,7 +265,7 @@ def factor_mapping(ID):
                     xgrid = np.arange(param_bounds[top_predictors[0]][0], 
                                       param_bounds[top_predictors[0]][1], np.around((ranges[0][1]-ranges[0][0])/100,decimals=4))
                     ygrid = np.arange(param_bounds[top_predictors[1]][0], 
-                                      param_bounds[top_predictors[1]][1], np.around((ranges[0][1]-ranges[0][0])/100,decimals=4))
+                                      param_bounds[top_predictors[1]][1], np.around((ranges[1][1]-ranges[1][0])/100,decimals=4))
                     all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
                     result = fitLogit(dta, [all_predictors[i] for i in [0,1]])
                     contourset = plotContourMap(axes, result, dta, contour_cmap, 
@@ -313,7 +315,7 @@ def factor_mapping(ID):
                     # define grid of x (1st predictor), and y (2nd predictor) dimensions
                     # to plot contour map over
                     xgrid = np.arange(param_bounds[top_predictors[0]][0], param_bounds[top_predictors[0]][1], np.around((ranges[0][1]-ranges[0][0])/100,decimals=4))
-                    ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], np.around((ranges[0][1]-ranges[0][0])/100,decimals=4))
+                    ygrid = np.arange(param_bounds[top_predictors[1]][0], param_bounds[top_predictors[1]][1], np.around((ranges[1][1]-ranges[1][0])/100,decimals=4))
                     all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
                     result = fitLogit(dta, [all_predictors[i] for i in [0,1]])
                     contourset = plotContourMap(axes, result, dta, contour_cmap, 

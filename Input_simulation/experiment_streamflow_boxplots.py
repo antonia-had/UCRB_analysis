@@ -7,13 +7,13 @@ plt.ioff()
 
 design = str(sys.argv[1])
 
-# load paleo data at Cisco
-Paleo = pd.read_csv('../Summary_info/Cisco_Recon_v_Observed_v_Stateline.csv')
-
-# re-scale Cisco data to estimate data at CO-UT state line
-factor = np.nanmean(Paleo['ObservedNaturalStateline']/Paleo['ObservedNaturalCisco'])
-Paleo['ScaledNaturalCisco'] = Paleo['ObservedNaturalCisco']*factor
-Paleo['ScaledReconCisco'] = Paleo['ReconCisco']*factor
+## load paleo data at Cisco
+#Paleo = pd.read_csv('../Summary_info/Cisco_Recon_v_Observed_v_Stateline.csv')
+#
+## re-scale Cisco data to estimate data at CO-UT state line
+#factor = np.nanmean(Paleo['ObservedNaturalStateline']/Paleo['ObservedNaturalCisco'])
+#Paleo['ScaledNaturalCisco'] = Paleo['ObservedNaturalCisco']*factor
+#Paleo['ScaledReconCisco'] = Paleo['ReconCisco']*factor
 
 years = np.arange(1909, 2014)
 years_s = np.arange(1950, 2014)
@@ -62,11 +62,11 @@ baseCase = np.load('../Summary_info/Sample1_Flows_logspace.npy')[:,-1,:]
 
 synthetic_flows = np.load('../Summary_info/'+design+'_flows.npy')
 
-colors = ['#AA1209','#DD7373', '#305252', '#3C787E','#D0CD94', '#9597a3']
-labels=['Paleo', 'Historic', 'Stationary synthetic', 'CMIP3', 'CMIP5', 'This experiment']
-data = [Paleo['ScaledReconCisco'][:429].values, np.sum(historic_data, axis=1), np.sum(baseCase, axis=1), np.sum(CMIP3_flows, axis=2), np.sum(CMIP5_flows, axis=2), np.sum(synthetic_flows, axis=2)]
+colors = ['#DD7373', '#305252', '#3C787E','#D0CD94', '#9597a3'] #'#AA1209'
+labels=['Historic', 'Stationary synthetic', 'CMIP3', 'CMIP5', 'This experiment'] #'Paleo'
+data = [np.sum(historic_data, axis=1), np.sum(baseCase, axis=1), np.sum(CMIP3_flows, axis=2), np.sum(CMIP5_flows, axis=2), np.sum(synthetic_flows, axis=2)] #Paleo['ScaledReconCisco'][:429].values
 
-fig = plt.figure(figsize=(18,9))
+fig = plt.figure(figsize=(12,9))
 ax = fig.add_subplot(111)
 violinplots=ax.violinplot(data, vert=True)
 violinplots['cbars'].set_edgecolor('black')
@@ -78,12 +78,11 @@ for i in range(len(violinplots['bodies'])):
     vp.set_edgecolor('black')
     vp.set_alpha(1)
 ax.set_ylabel('Flow at Last Node (af)',fontsize=20)
-ax.set_xticks(np.arange(1,7))
+ax.set_xticks(np.arange(1,6))
 ax.set_xticklabels(labels,fontsize=16)
-ax.set_yticklabels(['{:,}'.format(int(x)) for x in ax.get_yticks().tolist()],fontsize=16)
 plt.savefig('../Summary_info/streamflow_violinplot_'+design+'.svg')
 
-fig = plt.figure(figsize=(18,9))
+fig = plt.figure(figsize=(12,9))
 ax = fig.add_subplot(111)
 violinplots=ax.violinplot(data, vert=True)
 violinplots['cbars'].set_edgecolor('black')
@@ -96,8 +95,7 @@ for i in range(len(violinplots['bodies'])):
     vp.set_alpha(1)
 ax.set_yscale( "log" )
 ax.set_ylabel('Flow at Last Node (af)',fontsize=20)
-ax.set_xticks(np.arange(1,7))
+ax.set_xticks(np.arange(1,6))
 ax.set_xticklabels(labels,fontsize=16)
-ax.set_yticklabels(['{:,}'.format(int(x)) for x in ax.get_yticks().tolist()],fontsize=16)
 plt.savefig('../Summary_info/streamflow_violinplot_'+design+'_log.svg')
 
