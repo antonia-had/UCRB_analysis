@@ -221,8 +221,8 @@ def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid
 #    return shrt_dur
 
 def factor_mapping(ID):
-    allSOWsperformance = plotfailureheatmap(ID)[0]/100
-    historic_percents = plotfailureheatmap(ID)[1]
+    allSOWsperformance, historic_percents = plotfailureheatmap(ID)
+    allSOWsperformance = allSOWsperformance/100
     historic_percents = [roundup(x) for x in historic_percents]
     dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
     if not os.path.exists('../'+design+'/Factor_mapping/LR_contours/'+ ID):
