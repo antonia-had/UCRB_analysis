@@ -7,12 +7,16 @@ import matplotlib.font_manager as font_manager
 
 months = 12
 years = 105
-demands = pd.read_csv('../../Structures_files/demands.csv',index_col=0)
-shortages = pd.read_csv('../../Structures_files/shortages.csv',index_col=0)
-structures = demands.index.tolist()
+all_IDs = np.genfromtxt('../../Structures_files/metrics_structures.txt',dtype='str').tolist()
+demands = pd.read_csv('../../Summary_info/demands_uncurtailed.csv',header = None, index_col=False)
+shortages = pd.read_csv('../../Summary_info/shortages_uncurtailed.csv',header = None, index_col=False)
+demands['index']=all_IDs
+demands = demands.set_index('index')
+shortages['index']=all_IDs
+shortages = shortages.set_index('index')
     
-yearly_demands = np.reshape(demands.values, (len(structures), years, months)) 
-yearly_shortages = np.reshape(shortages.values, (len(structures), years, months)) 
+yearly_demands = np.reshape(demands.values, (len(all_IDs), years, months)) 
+yearly_shortages = np.reshape(shortages.values, (len(all_IDs), years, months)) 
 
 yearly_demands_sorted = np.sort(yearly_demands, axis=2)
 yearly_shortages_sorted = np.sort(yearly_shortages, axis=2)
@@ -29,7 +33,7 @@ font = font_manager.FontProperties(family='Gill Sans MT',
 fig, axes = plt.subplots(2,3)
 for s in range(len(axes.flat)):
     ax = axes.flat[s]
-    j = structures.index(IDstoplot[s])
+    j = all_IDs.index(IDstoplot[s])
     for i in range(years):
         ax.plot(p, yearly_shortages_sorted[j,i,:], color='black')
     ax.plot(p, yearly_shortages_sorted[j,93,:], color='red', linewidth=4, label='Water Year 2002')
@@ -45,3 +49,4 @@ for s in range(len(axes.flat)):
 fig.set_size_inches([20,10])
 fig.savefig('./Paper1_figures/historic_impacts_fig2.svg')
 fig.savefig('./Paper1_figures/historic_impacts_fig2.png')
+

@@ -180,7 +180,7 @@ def plotfailureheatmap(ID):
     fig.savefig('../'+design+'/Factor_mapping/Heatmaps/'+ID+'.svg')
     plt.close()
     
-    np.save('../../'+design+'/Factor_mapping/'+ ID + '_heatmap.npy',allSOWs)
+    np.save('../'+design+'/Factor_mapping/'+ ID + '_heatmap.npy',allSOWs)
     
     return(allSOWs, historic_percents)       
 

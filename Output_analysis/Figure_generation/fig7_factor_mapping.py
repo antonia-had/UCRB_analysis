@@ -19,7 +19,7 @@ param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
 
-all_IDs = ['7000550','3704614']
+all_IDs = ['7000550','7200799','3704614']
 nStructures = len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
@@ -107,12 +107,11 @@ def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid
     ax.tick_params(axis='both',labelsize=12)
     return contourset
 
-fig, axes = plt.subplots(2,2, figsize=(18,12))
-freq = [7,1,2,0]
-mag = [0,7,6,7]
-heatmaps = [plotfailureheatmap(all_IDs[0])/100, plotfailureheatmap(all_IDs[1])/100]
-scores = [pd.read_csv('../../'+design+'/Factor_mapping/'+ all_IDs[0] + '_pseudo_r_scores.csv', sep=","),
-          pd.read_csv('../../'+design+'/Factor_mapping/'+ all_IDs[1] + '_pseudo_r_scores.csv', sep=",")]
+fig, axes = plt.subplots(3,2, figsize=(18,12))
+freq = [7,1,7,0,2,0]
+mag = [0,7,0,3,6,7]
+heatmaps = [plotfailureheatmap(all_IDs[i])/100 for i in range(len(all_IDs))]
+scores = [pd.read_csv('../../'+design+'/Factor_mapping/'+ all_IDs[i] + '_pseudo_r_scores.csv', sep=",") for i in range(len(all_IDs))]
 for i in range(len(axes.flat)):
     ax = axes.flat[i]
     allSOWsperformance = heatmaps[int(i/2)]
