@@ -10,7 +10,8 @@ plt.ioff()
 
 design = str(sys.argv[1])
 
-LHsamples = np.loadtxt('../../Qgen/' + design + '.txt')  
+LHsamples = np.loadtxt('../../Qgen/' + design + '.txt')
+CMIPsamples = np.loadtxt('../../Qgen/CMIP_SOWs.txt') 
 realizations = 10
 param_bounds=np.loadtxt('../../Qgen/uncertain_params_'+design[10:-5]+'.txt', usecols=(1,2))
 SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values for base SOW
@@ -99,14 +100,16 @@ def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid
     Z = np.reshape(z, np.shape(X))
 
     contourset = ax.contourf(X, Y, Z, levels, cmap=contour_cmap, aspect='auto')
-    ax.scatter(dta[xvar].values, dta[yvar].values, c=dta['Success'].values, edgecolor='none', cmap=dot_cmap)
+    #ax.scatter(dta[xvar].values, dta[yvar].values, c=dta['Success'].values, edgecolor='none', cmap=dot_cmap)
     ax.set_xlim(np.min(xgrid),np.max(xgrid))
     ax.set_ylim(np.min(ygrid),np.max(ygrid))
     ax.set_xlabel(xvar,fontsize=14)
     ax.set_ylabel(yvar,fontsize=14)
     ax.tick_params(axis='both',labelsize=12)
     return contourset
-
+'''
+Plot SOW points and LR contours
+'''
 fig, axes = plt.subplots(3,2, figsize=(18,12))
 freq = [7,1,7,0,2,0]
 mag = [0,7,0,3,6,7]
@@ -141,7 +144,8 @@ for i in range(len(axes.flat)):
     contourset = plotContourMap(ax, result, dta, contour_cmap, 
                                 dot_cmap, contour_levels, xgrid, 
                                 ygrid, all_predictors[0], all_predictors[1], base)
-
 fig.tight_layout()
 fig.savefig('./Paper1_figures/Figure_7_'+design+'.svg')
 plt.close()
+
+

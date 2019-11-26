@@ -2,10 +2,10 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import sys
-plt.switch_backend('agg')
-plt.ioff()
-
-design = str(sys.argv[1])
+#plt.switch_backend('agg')
+#plt.ioff()
+#
+#design = str(sys.argv[1])
 
 ## load paleo data at Cisco
 #Paleo = pd.read_csv('../Summary_info/Cisco_Recon_v_Observed_v_Stateline.csv')
@@ -41,7 +41,20 @@ CMIP5_flows = np.genfromtxt('../Summary_info/CMIP5_flows.csv', delimiter=',')
 CMIP5_flows = np.reshape(CMIP5_flows, [97, 64,12])
 
 # Load synthetic stationary flows
-baseCase = np.load('../Summary_info/Sample1_Flows_logspace.npy')[:,-1,:]
+#baseCase = np.zeros([10, len(years),12])
+#for k in range(10):       
+#    synthetic_file = open('../' + design + '/Experiment_files/cm2015x_S0_'+str(k+1)+'.xbm', 'r')
+#    all_split_data = [x.split('.') for x in synthetic_file.readlines()]
+#    yearcount = 0
+#    for i in range(16, len(all_split_data)):
+#        row_data = []
+#        row_data.extend(all_split_data[i][0].split())
+#        if row_data[1] == '09163500':
+#            data_to_write = [row_data[2]]+all_split_data[i][1:12]
+#            baseCase[k,yearcount,:] = [int(j) for j in data_to_write]
+#            yearcount+=1            
+#np.save('../Summary_info/stationarysynthetic_flows.npy', baseCase)
+baseCase = np.load('../Summary_info/stationarysynthetic_flows.npy')
 
 # Load synthetic nonstationary runs
 #synthetic_flows = np.zeros([10000, len(years),12])
@@ -64,7 +77,7 @@ synthetic_flows = np.load('../Summary_info/'+design+'_flows.npy')
 
 colors = ['#DD7373', '#305252', '#3C787E','#D0CD94', '#9597a3'] #'#AA1209'
 labels=['Historic', 'Stationary synthetic', 'CMIP3', 'CMIP5', 'This experiment'] #'Paleo'
-data = [np.sum(historic_data, axis=1), np.sum(baseCase, axis=1), np.sum(CMIP3_flows, axis=2), np.sum(CMIP5_flows, axis=2), np.sum(synthetic_flows, axis=2)] #Paleo['ScaledReconCisco'][:429].values
+data = [np.sum(historic_data, axis=1), np.sum(baseCase, axis=2), np.sum(CMIP3_flows, axis=2), np.sum(CMIP5_flows, axis=2), np.sum(synthetic_flows, axis=2)] #Paleo['ScaledReconCisco'][:429].values
 
 fig = plt.figure(figsize=(12,9))
 ax = fig.add_subplot(111)

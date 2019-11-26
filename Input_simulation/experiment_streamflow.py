@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-#import sys
+import sys
 #plt.switch_backend('agg')
 #plt.ioff()
 #
@@ -28,7 +28,19 @@ CMIP5_flows = np.genfromtxt('../Summary_info/CMIP5_flows.csv', delimiter=',')
 CMIP5_flows = np.reshape(CMIP5_flows, [97, 64, 12])
 
 # Load synthetic stationary flows
-baseCase = np.load('../Summary_info/Sample1_Flows_logspace.npy')[:,-1,:]
+#baseCase = np.zeros([10, len(years),12])
+#for k in range(10):       
+#    synthetic_file = open('../' + design + '/Experiment_files/cm2015x_S0_'+str(k+1)+'.xbm', 'r')
+#    all_split_data = [x.split('.') for x in synthetic_file.readlines()]
+#    yearcount = 0
+#    for i in range(16, len(all_split_data)):
+#        row_data = []
+#        row_data.extend(all_split_data[i][0].split())
+#        if row_data[1] == '09163500':
+#            data_to_write = [row_data[2]]+all_split_data[i][1:12]
+#            baseCase[k,yearcount,:] = [int(j) for j in data_to_write]
+#            yearcount+=1 
+baseCase = np.load('../Summary_info/stationarysynthetic_flows.npy')
 
 # Load synthetic nonstationary runs
 #synthetic_flows = np.zeros([10000, len(years),12])
@@ -55,11 +67,11 @@ data = [historic_data, baseCase, CMIP3_flows, CMIP5_flows, synthetic_flows][::-1
         
 fig = plt.figure(figsize=(12,9))
 ax = fig.add_subplot(111)
-for i in range(3):
+for i in range(4):
     ax.fill_between(range(12), np.min(np.min(data[i], axis=0),axis=0),
                     np.max(np.max(data[i], axis=0),axis=0), color=colors[i],
                     label=labels[i],alpha=0.8)
-for i in range(3,len(data)):
+for i in range(4,len(data)):
     ax.fill_between(range(12), np.min(data[i], axis=0),
             np.max(data[i], axis=0), color=colors[i],
             label=labels[i],alpha=0.8)
