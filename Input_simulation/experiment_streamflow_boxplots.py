@@ -79,6 +79,8 @@ colors = ['#DD7373', '#305252', '#3C787E','#D0CD94', '#9597a3'] #'#AA1209'
 labels=['Historic', 'Stationary synthetic', 'CMIP3', 'CMIP5', 'This experiment'] #'Paleo'
 data = [np.sum(historic_data, axis=1), np.sum(baseCase, axis=2), np.sum(CMIP3_flows, axis=2), np.sum(CMIP5_flows, axis=2), np.sum(synthetic_flows, axis=2)] #Paleo['ScaledReconCisco'][:429].values
 
+#Figures in imperial units
+
 fig = plt.figure(figsize=(12,9))
 ax = fig.add_subplot(111)
 violinplots=ax.violinplot(data, vert=True)
@@ -112,3 +114,22 @@ ax.set_xticks(np.arange(1,6))
 ax.set_xticklabels(labels,fontsize=16)
 plt.savefig('../Summary_info/streamflow_violinplot_'+design+'_log.svg')
 
+#Figures in metric units
+data_metric = [x*1233.4818 for x in data]  
+
+fig = plt.figure(figsize=(12,9))
+ax = fig.add_subplot(111)
+violinplots=ax.violinplot(data_metric, vert=True)
+violinplots['cbars'].set_edgecolor('black')
+violinplots['cmins'].set_edgecolor('black')
+violinplots['cmaxes'].set_edgecolor('black')
+for i in range(len(violinplots['bodies'])):
+    vp = violinplots['bodies'][i]
+    vp.set_facecolor(colors[i])
+    vp.set_edgecolor('black')
+    vp.set_alpha(1)
+ax.set_yscale( "log" )
+ax.set_ylabel('Flow at Last Node ($m^3$)',fontsize=20)
+ax.set_xticks(np.arange(1,6))
+ax.set_xticklabels(labels,fontsize=16)
+plt.savefig('../Summary_info/streamflow_violinplot_'+design+'_log_metric.svg')

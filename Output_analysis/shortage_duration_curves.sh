@@ -8,6 +8,7 @@
 #SBATCH --output="../output/curves.out"
 
 module load python
+module load scipy/3.6
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 module load mpi4py
-module load scipy
-ibrun python shortage_duration_curves.py LHsamples_original_1000
+ibrun python3 shortage_duration_curves_metric.py LHsamples_original_1000

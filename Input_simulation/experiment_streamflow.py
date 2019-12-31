@@ -64,7 +64,8 @@ synthetic_flows = np.load('../Summary_info/'+design+'_flows.npy')
 colors = ['#DD7373', '#305252', '#3C787E','#D0CD94', '#9597a3'][::-1] #'#AA1209'
 labels=['Historic', 'Stationary synthetic', 'CMIP3', 'CMIP5', 'This experiment'][::-1] #'Paleo'
 data = [historic_data, baseCase, CMIP3_flows, CMIP5_flows, synthetic_flows][::-1] #Paleo['ScaledReconCisco'][:429].values
-        
+   
+# Figure in imperial units     
 fig = plt.figure(figsize=(12,9))
 ax = fig.add_subplot(111)
 for i in range(4):
@@ -91,3 +92,30 @@ fig.legend(handles, labels, fontsize=16,loc='lower center',ncol=3)
 ax.set_title('Streamflow across experiments',fontsize=18)
 fig.savefig('../Summary_info/hydrograph_'+design+'_log.svg')
 
+# Figure in metric units 
+data_metric = [x*1233.4818 for x in data]   
+fig = plt.figure(figsize=(12,9))
+ax = fig.add_subplot(111)
+for i in range(4):
+    ax.fill_between(range(12), np.min(np.min(data_metric[i], axis=0),axis=0),
+                    np.max(np.max(data_metric[i], axis=0),axis=0), color=colors[i],
+                    label=labels[i],alpha=0.8)
+for i in range(4,len(data_metric)):
+    ax.fill_between(range(12), np.min(data_metric[i], axis=0),
+            np.max(data_metric[i], axis=0), color=colors[i],
+            label=labels[i],alpha=0.8)
+ax.plot(range(12), historic_data[93,:]*1233.4818, color='#AA1209', linewidth = 2, label='Water Year 2002')             
+ax.set_yscale("log")               
+ax.set_xlabel('Month',fontsize=16)
+ax.set_ylabel('Flow at Last Node ($m^3$)',fontsize=16)
+ax.set_xlim([0,11])
+ax.tick_params(axis='both',labelsize=14)
+ax.set_xticks(range(12))
+ax.set_xticklabels(['O','N','D','J','F','M','A','M','J','J','A','S'])
+handles, labels = plt.gca().get_legend_handles_labels()
+labels, ids = np.unique(labels, return_index=True)
+handles = [handles[i] for i in ids]
+fig.subplots_adjust(bottom=0.2)
+fig.legend(handles, labels, fontsize=16,loc='lower center',ncol=3)
+ax.set_title('Streamflow across experiments',fontsize=18)
+fig.savefig('../Summary_info/hydrograph_'+design+'_log_metric.svg')
