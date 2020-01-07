@@ -4,9 +4,9 @@ import statsmodels.api as sm
 import scipy.stats
 import matplotlib.pyplot as plt
 import itertools
-from mpi4py import MPI
 import math
 import sys
+from mpi4py import MPI
 sys.path.append('../')
 from SALib.analyze import delta
 plt.ioff()
@@ -92,7 +92,7 @@ def sensitivity_analysis_per_structure(ID):
     for i in range(len(percentiles)):
         if syn_magnitude[i,:].any():
             try:
-                result= delta.analyze(problem, np.repeat(LHsamples, realizations, axis = 0), syn_magnitude[i,:], print_to_console=False, num_resamples=2)
+                result= delta.analyze(problem, np.repeat(LHsamples, realizations, axis = 0), syn_magnitude[i,:], print_to_console=False, num_resamples=10)
                 DELTA[percentiles[i]]= result['delta']
                 DELTA_conf[percentiles[i]] = result['delta_conf']
                 S1[percentiles[i]]=result['S1']

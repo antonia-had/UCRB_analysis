@@ -5,10 +5,9 @@ plt.switch_backend('agg')
 import matplotlib.patches
 from scipy import stats
 import pandas as pd
-import itertools
 #import os
-#from mpi4py import MPI
 import math
+from mpi4py import MPI
 import sys
 plt.ioff()
 
@@ -40,11 +39,6 @@ def alpha(i, base=0.2):
     for j in range(i):
         ar.append(l(ar[-1]))
     return ar[-1]
-
-def shortage_duration(sequence):
-    cnt_shrt = [sequence[i]>0 for i in range(len(sequence))] # Returns a list of True values when there's a shortage
-    shrt_dur = [ sum( 1 for _ in group ) for key, group in itertools.groupby( cnt_shrt ) if key ] # Counts groups of True values
-    return shrt_dur
   
 def plotSDC(synthetic, histData, structure_name):
     n = 12
@@ -53,7 +47,7 @@ def plotSDC(synthetic, histData, structure_name):
     #Reshape to annual totals
     f_hist_totals = np.sum(f_hist,1)  
     #Calculate historical shortage duration curves
-    #F_hist = np.sort(f_hist_totals) # for inverse sorting add this at the end [::-1]
+    F_hist = np.sort(f_hist_totals) # for inverse sorting add this at the end [::-1]
     
     #Reshape synthetic data
     #Create matrix of [no. years x no. months x no. samples]
@@ -63,46 +57,9 @@ def plotSDC(synthetic, histData, structure_name):
         synthetic_global[:,:,j]= np.reshape(synthetic[:,j], (int(np.size(synthetic[:,j])/n), n))
     #Reshape to annual totals
     synthetic_global_totals = np.sum(synthetic_global,1) 
-    multi_year_durations = [[]]*samples
-    
-    # Count consecutive years of shortage
-    for i in range(samples):
-        multi_year_durations[i] = shortage_duration(synthetic_global_totals[:,i])
-    hist_durations = shortage_duration(f_hist_totals)
     
     p=np.arange(100,-10,-10)
-    p_i=p[::-1]
-    hist_durations_percentiles = np.zeros([len(p_i)])
-    multi_year_durations_percentiles = np.zeros([len(p_i),samples])
-    for i in range(samples):
-        for j in range(len(p_i)):
-            if hist_durations:
-                hist_durations_percentiles[j] = np.percentile(hist_durations,p_i[j])
-            if multi_year_durations[i]:
-                multi_year_durations_percentiles[j,i] = np.percentile(multi_year_durations[i],p_i[j])
     
-#    fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
-#    # ax1
-#    handles = []
-#    labels=[]
-#    color = '#000292'
-#    for i in range(len(p)):
-#        ax1.fill_between(p_i, np.min(multi_year_durations_percentiles[:,:],1), np.percentile(multi_year_durations_percentiles[:,:], p[i], axis=1), color=color, alpha = 0.1)
-#        ax1.plot(p_i, np.percentile(multi_year_durations_percentiles[:,:], p[i], axis=1), linewidth=0.5, color=color, alpha = 0.3)
-#        handle = matplotlib.patches.Rectangle((0,0),1,1, color=color, alpha=alpha(i, base=0.1))
-#        handles.append(handle)
-#        label = "{:.0f} %".format(100-p[i])
-#        labels.append(label)
-#    ax1.plot(p_i,hist_durations_percentiles, c='black', linewidth=2, label='Historical record')
-#    ax1.set_xlim(0,100)
-#    ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
-#    ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
-#    ax1.set_ylabel('Years of continuous shortages', fontsize=12)
-#    fig.suptitle('Duration of shortage for ' + structure_name, fontsize=16)
-#    fig.savefig('../'+design+'/MultiyearShortageCurves/' + structure_name + '_metric.svg')
-#    fig.savefig('../'+design+'/MultiyearShortageCurves/' + structure_name + '_metric.png')
-#    fig.clf()
-#    
     #Calculate synthetic shortage duration curves
     F_syn = np.empty([int(np.size(histData)/n),samples])
     F_syn[:] = np.NaN
@@ -114,34 +71,33 @@ def plotSDC(synthetic, histData, structure_name):
     for m in range(int(np.size(histData)/n)):
         perc_scores[m,:] = [stats.percentileofscore(F_syn[m,:], j, 'rank') for j in F_syn[m,:]]
                 
-#    P = np.arange(1.,len(F_hist)+1)*100 / len(F_hist)
-    
-    
-#    ylimit = round(np.max(F_syn), -3)
-#    fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
-#    # ax1
-#    handles = []
-#    labels=[]
-#    color = '#000292'
-#    for i in range(len(p)):
-#        ax1.fill_between(P, np.min(F_syn[:,:],1), np.percentile(F_syn[:,:], p[i], axis=1), color=color, alpha = 0.1)
-#        ax1.plot(P, np.percentile(F_syn[:,:], p[i], axis=1), linewidth=0.5, color=color, alpha = 0.3)
-#        handle = matplotlib.patches.Rectangle((0,0),1,1, color=color, alpha=alpha(i, base=0.1))
-#        handles.append(handle)
-#        label = "{:.0f} %".format(100-p[i])
-#        labels.append(label)
-#    ax1.plot(P,F_hist, c='black', linewidth=2, label='Historical record')
-#    ax1.set_ylim(0,ylimit)
-#    ax1.set_xlim(0,100)
-#    ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
-#    ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
-#    ax1.set_ylabel('Annual shortage (af)', fontsize=12)
-#
-#    fig.suptitle('Shortage magnitudes for ' + structure_name, fontsize=16)
-#    plt.subplots_adjust(bottom=0.2)
-#    fig.savefig('../'+design+'/ShortagePercentileCurves/' + structure_name + '_metric.svg')
-#    fig.savefig('../'+design+'/ShortagePercentileCurves/' + structure_name + '_metric.png')
-#    fig.clf()
+    P = np.arange(1.,len(F_hist)+1)*100 / len(F_hist)
+   
+    ylimit = round(np.max(F_syn), -3)
+    fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
+    # ax1
+    handles = []
+    labels=[]
+    color = '#000292'
+    for i in range(len(p)):
+        ax1.fill_between(P, np.min(F_syn[:,:],1), np.percentile(F_syn[:,:], p[i], axis=1), color=color, alpha = 0.1)
+        ax1.plot(P, np.percentile(F_syn[:,:], p[i], axis=1), linewidth=0.5, color=color, alpha = 0.3)
+        handle = matplotlib.patches.Rectangle((0,0),1,1, color=color, alpha=alpha(i, base=0.1))
+        handles.append(handle)
+        label = "{:.0f} %".format(100-p[i])
+        labels.append(label)
+    ax1.plot(P,F_hist, c='black', linewidth=2, label='Historical record')
+    ax1.set_ylim(0,ylimit)
+    ax1.set_xlim(0,100)
+    ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
+    ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
+    ax1.set_ylabel('Annual shortage (af)', fontsize=12)
+
+    fig.suptitle('Shortage magnitudes for ' + structure_name, fontsize=16)
+    plt.subplots_adjust(bottom=0.2)
+    fig.savefig('../'+design+'/ShortagePercentileCurves/' + structure_name + '_metric.svg')
+    fig.savefig('../'+design+'/ShortagePercentileCurves/' + structure_name + '_metric.png')
+    fig.clf()
   
     '''
     Sensitivity analysis plots normalized to 0-100
@@ -163,9 +119,11 @@ def plotSDC(synthetic, histData, structure_name):
     S1_values = S1_values.clip(lower=0)
     for p in percentiles:
         total = np.sum(S1_values[str(p)])
-        if total!=0:
+        if total!=0 and total<1:
             diff = 1-total
-            S1_values.at['Interaction',str(p)]=diff               
+            S1_values.at['Interaction',str(p)]=diff
+        else:
+            S1_values.at['Interaction',str(p)]=0               
     for column in S1_values:
         S1_values[column] = S1_values[column]*100
     S1_values_to_plot = S1_values.values.tolist()
@@ -175,9 +133,11 @@ def plotSDC(synthetic, histData, structure_name):
     R2_values = R2_values.clip(lower=0)
     for p in percentiles:
         total = np.sum(R2_values[str(p)])
-        if total!=0:
+        if total!=0 and total<1:
             diff = 1-total
             R2_values.at['Interaction',str(p)]=diff
+        else:
+            R2_values.at['Interaction',str(p)]=0  
     for column in R2_values:
         R2_values[column] = R2_values[column]*100
     R2_values_to_plot = R2_values.values.tolist()
@@ -280,24 +240,24 @@ def plotSDC(synthetic, histData, structure_name):
 #        fig.savefig('../'+design+'/ShortageSensitivityCurves/' + structure_name + '_'+titles[k]+'.svg')
 #        fig.savefig('../'+design+'/ShortageSensitivityCurves/' + structure_name + '_'+titles[k]+'.png')
 
-## Begin parallel simulation
-#comm = MPI.COMM_WORLD
-#
-## Get the number of processors and the rank of processors
-#rank = comm.rank
-#nprocs = comm.size
-#
-## Determine the chunk which each processor will neeed to do
-#count = int(math.floor(nStructures/nprocs))
-#remainder = nStructures % nprocs
-#
-## Use the processor rank to determine the chunk of work each processor will do
-#if rank < remainder:
-#	start = rank*(count+1)
-#	stop = start + count + 1
-#else:
-#	start = remainder*(count+1) + (rank-remainder)*count
-#	stop = start + count
+# Begin parallel simulation
+comm = MPI.COMM_WORLD
+
+# Get the number of processors and the rank of processors
+rank = comm.rank
+nprocs = comm.size
+
+# Determine the chunk which each processor will neeed to do
+count = int(math.floor(nStructures/nprocs))
+remainder = nStructures % nprocs
+
+# Use the processor rank to determine the chunk of work each processor will do
+if rank < remainder:
+	start = rank*(count+1)
+	stop = start + count + 1
+else:
+	start = remainder*(count+1) + (rank-remainder)*count
+	stop = start + count
     
 for i in range(nStructures):#start, stop):
     histData = np.loadtxt('../'+design+'/Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]*1233.4818
