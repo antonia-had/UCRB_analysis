@@ -72,7 +72,7 @@ def plotSDC(synthetic, histData, structure_name):
                 
     P = np.arange(1.,len(F_hist)+1)*100 / len(F_hist)
    
-    ylimit = round(np.max(F_syn), -3)
+    ylimit = np.max(F_syn)
     fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
     # ax1
     handles = []

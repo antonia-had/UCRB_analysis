@@ -27,8 +27,8 @@ def alpha(i, base=0.2):
         ar.append(l(ar[-1]))
     return ar[-1]
 
-def shortage_duration(sequence):
-    cnt_shrt = [sequence[i]>0 for i in range(len(sequence))] # Returns a list of True values when there's a shortage
+def shortage_duration(sequence, threshold):
+    cnt_shrt = [sequence[i]>threshold for i in range(len(sequence))] # Returns a list of True values when there's a shortage
     shrt_dur = [ sum( 1 for _ in group ) for key, group in itertools.groupby( cnt_shrt ) if key ] # Counts groups of True values
     return shrt_dur
   
@@ -52,46 +52,9 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
         synthetic_global_d[:,:,j]= np.reshape(synthetic_demand[:,j], (int(np.size(synthetic_demand[:,j])/n), n))
     #Reshape to annual totals
     synthetic_global_totals_ratio = np.sum(synthetic_global_s,1)/np.sum(synthetic_global_d,1)
-#    multi_year_durations = [[]]*samples
-#    
-#    # Count consecutive years of shortage
-#    for i in range(samples):
-#        multi_year_durations[i] = shortage_duration(synthetic_global_totals[:,i])
-#    hist_durations = shortage_duration(f_hist_totals)
-#    
-    p=np.arange(100,0,-10)
-#    p_i=p[::-1]
-#    hist_durations_percentiles = np.zeros([len(p_i)])
-#    multi_year_durations_percentiles = np.zeros([len(p_i),samples])
-#    for i in range(samples):
-#        for j in range(len(p_i)):
-#            if hist_durations:
-#                hist_durations_percentiles[j] = np.percentile(hist_durations,p_i[j])
-#            if multi_year_durations[i]:
-#                multi_year_durations_percentiles[j,i] = np.percentile(multi_year_durations[i],p_i[j])
-#    
-#    fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
-#    # ax1
-#    handles = []
-#    labels=[]
-#    color = '#000292'
-#    for i in range(len(p)):
-#        ax1.fill_between(p_i, np.min(multi_year_durations_percentiles[:,:],1), np.percentile(multi_year_durations_percentiles[:,:], p[i], axis=1), color=color, alpha = 0.1)
-#        ax1.plot(p_i, np.percentile(multi_year_durations_percentiles[:,:], p[i], axis=1), linewidth=0.5, color=color, alpha = 0.3)
-#        handle = matplotlib.patches.Rectangle((0,0),1,1, color=color, alpha=alpha(i, base=0.1))
-#        handles.append(handle)
-#        label = "{:.0f} %".format(100-p[i])
-#        labels.append(label)
-#    ax1.plot(p_i,hist_durations_percentiles, c='black', linewidth=2, label='Historical record')
-#    ax1.set_xlim(0,100)
-#    ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
-#    ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
-#    ax1.set_ylabel('Years of continuous shortages', fontsize=12)
-#    fig.suptitle('Duration of shortage for ' + structure_name, fontsize=16)
-#    fig.savefig('./MultiyearShortageCurves/' + structure_name + '.svg')
-#    fig.savefig('./MultiyearShortageCurves/' + structure_name + '.png')
-#    fig.clf()
     
+    p=np.arange(100,0,-10)
+
     #Calculate synthetic shortage duration curves
     F_syn = np.empty([int(np.size(histData_shortage)/n),samples*realizations])
     F_syn[:] = np.NaN
@@ -129,9 +92,50 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
 
     fig.suptitle('Shortage ratio for ' + structure_name, fontsize=16)
     plt.subplots_adjust(bottom=0.2)
-    fig.savefig('./RatioShortageCurves/' + structure_name + '.svg')
-    fig.savefig('./RatioShortageCurves/' + structure_name + '.png')
+    fig.savefig('../'+design+'/RatioShortageCurves/' + structure_name + '.svg')
+    fig.savefig('../'+design+'/RatioShortageCurves/' + structure_name + '.png')
     fig.clf()
+    
+    
+    for t in range(10):
+        multi_year_durations = [[]]*samples*realizations
+        # Count consecutive years of shortage
+        for i in range(samples*realizations):
+            multi_year_durations[i] = shortage_duration(synthetic_global_totals_ratio[:,i],t/10)
+        hist_durations = shortage_duration(f_hist_totals_ratio,t/10)
+        
+        p_i=p[::-1]
+        hist_durations_percentiles = np.zeros([len(p_i)])
+        multi_year_durations_percentiles = np.zeros([len(p_i),samples*realizations])
+        for i in range(samples*realizations):
+            for j in range(len(p_i)):
+                if hist_durations:
+                    hist_durations_percentiles[j] = np.percentile(hist_durations,p_i[j])
+                if multi_year_durations[i]:
+                    multi_year_durations_percentiles[j,i] = np.percentile(multi_year_durations[i],p_i[j])
+        
+        fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
+        # ax1
+        handles = []
+        labels=[]
+        color = '#000292'
+        for i in range(len(p)):
+            ax1.fill_between(p_i, np.min(multi_year_durations_percentiles[:,:],1), np.percentile(multi_year_durations_percentiles[:,:], p[i], axis=1), color=color, alpha = 0.1)
+            ax1.plot(p_i, np.percentile(multi_year_durations_percentiles[:,:], p[i], axis=1), linewidth=0.5, color=color, alpha = 0.3)
+            handle = matplotlib.patches.Rectangle((0,0),1,1, color=color, alpha=alpha(i, base=0.1))
+            handles.append(handle)
+            label = "{:.0f} %".format(100-p[i])
+            labels.append(label)
+        ax1.plot(p_i,hist_durations_percentiles, c='black', linewidth=2, label='Historical record')
+        ax1.set_xlim(0,100)
+        ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
+        ax1.set_xlabel('Duration percentile', fontsize=20)
+        ax1.set_ylabel('Years of continuous shortages of above '+str(t*10)+'%', fontsize=20)
+        fig.suptitle('Duration of shortage for ' + structure_name, fontsize=16)
+        fig.savefig('../'+design+'/MultiyearShortageCurves/' + structure_name + str(t*10)+'.svg')
+        fig.savefig('../'+design+'/MultiyearShortageCurves/' + structure_name + str(t*10)+'.png')
+        fig.clf()
+    
     
 # Begin parallel simulation
 comm = MPI.COMM_WORLD
