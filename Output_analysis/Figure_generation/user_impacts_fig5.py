@@ -43,9 +43,9 @@ def plotSDC(ax1, synthetic, histData):
     
     #Reshape synthetic data
     #Create matrix of [no. years x no. months x no. samples]
-    synthetic_global = np.zeros([int(np.size(histData)/n),n,samples]) 
+    synthetic_global = np.zeros([int(np.size(histData)/n),n,samples*realizations]) 
     # Loop through every SOW and reshape to [no. years x no. months]
-    for j in range(samples):
+    for j in range(samples*realizations):
         synthetic_global[:,:,j]= np.reshape(synthetic[:,j], (int(np.size(synthetic[:,j])/n), n))
     #Reshape to annual totals
     synthetic_global_totals = np.sum(synthetic_global,1)    

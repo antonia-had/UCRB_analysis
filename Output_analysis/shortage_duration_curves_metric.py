@@ -5,7 +5,6 @@ plt.switch_backend('agg')
 import matplotlib.patches
 from scipy import stats
 import pandas as pd
-#import os
 import math
 from mpi4py import MPI
 import sys
@@ -15,7 +14,7 @@ design = str(sys.argv[1])
 
 
 transbasin = np.genfromtxt('../Structures_files/TBD.txt',dtype='str').tolist()
-all_IDs = ['3600687', '7000550', '7200799', '7200645', '3704614', '7202003']#np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
+all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
 nStructures = len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
@@ -51,9 +50,9 @@ def plotSDC(synthetic, histData, structure_name):
     
     #Reshape synthetic data
     #Create matrix of [no. years x no. months x no. samples]
-    synthetic_global = np.zeros([int(np.size(histData)/n),n,samples]) 
+    synthetic_global = np.zeros([int(np.size(histData)/n),n,samples*realizations]) 
     # Loop through every SOW and reshape to [no. years x no. months]
-    for j in range(samples):
+    for j in range(samples*realizations):
         synthetic_global[:,:,j]= np.reshape(synthetic[:,j], (int(np.size(synthetic[:,j])/n), n))
     #Reshape to annual totals
     synthetic_global_totals = np.sum(synthetic_global,1) 
@@ -90,8 +89,8 @@ def plotSDC(synthetic, histData, structure_name):
     ax1.set_ylim(0,ylimit)
     ax1.set_xlim(0,100)
     ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
-    ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
-    ax1.set_ylabel('Annual shortage (af)', fontsize=12)
+    ax1.set_xlabel('Shortage magnitude percentile', fontsize=20)
+    ax1.set_ylabel('Annual shortage (Million $m^3$)', fontsize=20)
 
     fig.suptitle('Shortage magnitudes for ' + structure_name, fontsize=16)
     plt.subplots_adjust(bottom=0.2)
@@ -99,67 +98,67 @@ def plotSDC(synthetic, histData, structure_name):
     fig.savefig('../'+design+'/ShortagePercentileCurves/' + structure_name + '_metric.png')
     fig.clf()
   
-    '''
-    Sensitivity analysis plots normalized to 0-100
-    '''
-    
-    delta_values = pd.read_csv('../'+design+'/Magnitude_Sensitivity_analysis/'+ structure_name + '_DELTA.csv')
-    delta_values.set_index(list(delta_values)[0],inplace=True)
-    delta_values = delta_values.clip(lower=0)
-    for p in percentiles:
-        total = np.sum(delta_values[str(p)])
-        if total!=0:
-            for param in param_names:
-                    value = 100*delta_values.at[param,str(p)]/total
-                    delta_values.set_value(param,str(p),value)
-    delta_values_to_plot = delta_values.values.tolist()
-    
-    S1_values = pd.read_csv('../'+design+'/Magnitude_Sensitivity_analysis/'+ structure_name + '_S1.csv')
-    S1_values.set_index(list(S1_values)[0],inplace=True)
-    S1_values = S1_values.clip(lower=0)
-    for p in percentiles:
-        total = np.sum(S1_values[str(p)])
-        if total!=0 and total<1:
-            diff = 1-total
-            S1_values.at['Interaction',str(p)]=diff
-        else:
-            S1_values.at['Interaction',str(p)]=0               
-    for column in S1_values:
-        S1_values[column] = S1_values[column]*100
-    S1_values_to_plot = S1_values.values.tolist()
-
-    R2_values = pd.read_csv('../'+design+'/Magnitude_Sensitivity_analysis/'+ structure_name + '_R2.csv')
-    R2_values.set_index(list(R2_values)[0],inplace=True)
-    R2_values = R2_values.clip(lower=0)
-    for p in percentiles:
-        total = np.sum(R2_values[str(p)])
-        if total!=0 and total<1:
-            diff = 1-total
-            R2_values.at['Interaction',str(p)]=diff
-        else:
-            R2_values.at['Interaction',str(p)]=0  
-    for column in R2_values:
-        R2_values[column] = R2_values[column]*100
-    R2_values_to_plot = R2_values.values.tolist()
-    
-    color_list = ["#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#32B3F7","#F77632"]  
-                  
-    values_to_plot = [delta_values_to_plot, S1_values_to_plot, R2_values_to_plot]
-    titles = ["Delta","S1","R2"]
-    yaxistitles = ["Change explained","Variance explained","Variance explained"]
-    for k in range(len(titles)):
-        fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
-        ax1.stackplot(np.arange(0,100), values_to_plot[k], colors = color_list)
-        ax1.set_title(titles[k])
-        ax1.set_ylim(0,150)
-        ax1.set_xlim(0,100)
-        handles, labels = ax1.get_legend_handles_labels()
-        ax1.set_ylabel(yaxistitles[k], fontsize=12)
-        ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
-        plt.legend(handles[1:], labels = parameter_names_long[1:], fontsize=10, loc='lower center',ncol = 5)
-        fig.suptitle('Shortage magnitude sensitivity for '+ structure_name, fontsize=16)
-        fig.savefig('../'+design+'/ShortageSensitivityCurves/' + structure_name + '_'+titles[k]+'_norm.svg')
-        fig.savefig('../'+design+'/ShortageSensitivityCurves/' + structure_name + '_'+titles[k]+'_norm.png')
+#    '''
+#    Sensitivity analysis plots normalized to 0-100
+#    '''
+#    
+#    delta_values = pd.read_csv('../'+design+'/Magnitude_Sensitivity_analysis/'+ structure_name + '_DELTA.csv')
+#    delta_values.set_index(list(delta_values)[0],inplace=True)
+#    delta_values = delta_values.clip(lower=0)
+#    for p in percentiles:
+#        total = np.sum(delta_values[str(p)])
+#        if total!=0:
+#            for param in param_names:
+#                    value = 100*delta_values.at[param,str(p)]/total
+#                    delta_values.set_value(param,str(p),value)
+#    delta_values_to_plot = delta_values.values.tolist()
+#    
+#    S1_values = pd.read_csv('../'+design+'/Magnitude_Sensitivity_analysis/'+ structure_name + '_S1.csv')
+#    S1_values.set_index(list(S1_values)[0],inplace=True)
+#    S1_values = S1_values.clip(lower=0)
+#    for p in percentiles:
+#        total = np.sum(S1_values[str(p)])
+#        if total!=0 and total<1:
+#            diff = 1-total
+#            S1_values.at['Interaction',str(p)]=diff
+#        else:
+#            S1_values.at['Interaction',str(p)]=0               
+#    for column in S1_values:
+#        S1_values[column] = S1_values[column]*100
+#    S1_values_to_plot = S1_values.values.tolist()
+#
+#    R2_values = pd.read_csv('../'+design+'/Magnitude_Sensitivity_analysis/'+ structure_name + '_R2.csv')
+#    R2_values.set_index(list(R2_values)[0],inplace=True)
+#    R2_values = R2_values.clip(lower=0)
+#    for p in percentiles:
+#        total = np.sum(R2_values[str(p)])
+#        if total!=0 and total<1:
+#            diff = 1-total
+#            R2_values.at['Interaction',str(p)]=diff
+#        else:
+#            R2_values.at['Interaction',str(p)]=0  
+#    for column in R2_values:
+#        R2_values[column] = R2_values[column]*100
+#    R2_values_to_plot = R2_values.values.tolist()
+#    
+#    color_list = ["#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#32B3F7","#F77632"]  
+#                  
+#    values_to_plot = [delta_values_to_plot, S1_values_to_plot, R2_values_to_plot]
+#    titles = ["Delta","S1","R2"]
+#    yaxistitles = ["Change explained","Variance explained","Variance explained"]
+#    for k in range(len(titles)):
+#        fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
+#        ax1.stackplot(np.arange(0,100), values_to_plot[k], colors = color_list)
+#        ax1.set_title(titles[k])
+#        ax1.set_ylim(0,150)
+#        ax1.set_xlim(0,100)
+#        handles, labels = ax1.get_legend_handles_labels()
+#        ax1.set_ylabel(yaxistitles[k], fontsize=12)
+#        ax1.set_xlabel('Shortage magnitude percentile', fontsize=12)
+#        plt.legend(handles[1:], labels = parameter_names_long[1:], fontsize=10, loc='lower center',ncol = 5)
+#        fig.suptitle('Shortage magnitude sensitivity for '+ structure_name, fontsize=16)
+#        fig.savefig('../'+design+'/ShortageSensitivityCurves/' + structure_name + '_'+titles[k]+'_norm.svg')
+#        fig.savefig('../'+design+'/ShortageSensitivityCurves/' + structure_name + '_'+titles[k]+'_norm.png')
     
     '''
     Sensitivity analysis plots
@@ -259,13 +258,13 @@ else:
 	start = remainder*(count+1) + (rank-remainder)*count
 	stop = start + count
     
-for i in range(nStructures):#start, stop):
-    histData = np.loadtxt('../'+design+'/Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]*1233.4818
+for i in range(start, stop):
+    histData = np.loadtxt('../'+design+'/Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_0.txt')[:,2]*1233.4818/1000000
     synthetic = np.zeros([len(histData), samples*realizations])
     for j in range(samples):
         data= np.loadtxt('../'+design+'/Infofiles/' +  all_IDs[i] + '/' + all_IDs[i] + '_info_' + str(j+1) + '.txt') 
         try:
-            synthetic[:,j*realizations:j*realizations+realizations]=data[:,idx]*1233.4818
+            synthetic[:,j*realizations:j*realizations+realizations]=data[:,idx]*1233.4818/1000000
         except IndexError:
             print(all_IDs[i] + '_info_' + str(j+1))
     plotSDC(synthetic, histData, all_IDs[i])
