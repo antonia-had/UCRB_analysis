@@ -3,7 +3,6 @@ import pandas as pd
 import statsmodels.api as sm
 import scipy.stats
 import matplotlib.pyplot as plt
-import itertools
 import math
 import sys
 from mpi4py import MPI
@@ -40,12 +39,6 @@ scipy.stats.chisqprob = lambda chisq, df: scipy.stats.chi2.sf(chisq, df)
 empty=[]
 n=12
 HIS_short = np.loadtxt('../'+design+'/Infofiles/7202003/7202003_info_1.txt')[:,2]
-
-
-def shortage_duration(sequence):
-    cnt_shrt = [sequence[i]>0 for i in range(len(sequence))] # Returns a list of True values when there's a shortage
-    shrt_dur = [ sum( 1 for _ in group ) for key, group in itertools.groupby( cnt_shrt ) if key ] # Counts groups of True values
-    return shrt_dur
 
 def fitOLS(dta, predictors):
     # concatenate intercept column of 1s
@@ -114,63 +107,7 @@ def sensitivity_analysis_per_structure(ID):
             result = fitOLS(dta, predictors)
             R2_scores.at[param_names[m],percentiles[i]]=result.rsquared
     R2_scores.to_csv('../'+design+'/Magnitude_Sensitivity_analysis/'+ ID + '_R2.csv')
-    
-#    '''
-#    Perform analysis for shortage duration
-#     This didn't really work and need to double check. No values whatsoever.
-#    '''
-#    DELTA = pd.DataFrame(np.zeros(params_no))
-#    DELTA_conf = pd.DataFrame(np.zeros(params_no))
-#    S1 = pd.DataFrame(np.zeros(params_no))
-#    S1_conf = pd.DataFrame(np.zeros(params_no))
-#    R2_scores = pd.DataFrame(np.zeros(params_no))
-#    DELTA.index=DELTA_conf.index=S1.index=S1_conf.index = R2_scores.index = param_names
-#
-#    d_synth = np.zeros([int(len(HIS_short)/2),samples*realizations]) #int(len(HIS_short)/2) is the max number of non-consecutive shortages
-#    for j in range(samples*realizations):
-#        durations = shortage_duration(SYN_short[:,j])
-#        d_synth[:,j] = np.pad(durations, (0,int(len(HIS_short)/2-len(durations))),'constant', constant_values=(0)) # this pads the array to have all of them be the same length
-#
-#    # Delta Method analysis
-#    try:
-#        result= delta.analyze(problem, np.repeat(LHsamples, realizations, axis = 0), d_synth, print_to_console=False)
-#        DELTA=result['delta']
-#        DELTA_conf=result['delta_conf']
-#        S1=result['S1']
-#        S1_conf=result['S1_conf']
-#    except:
-#        DELTA = DELTA
-#        DELTA_conf=DELTA_conf
-#        S1=S1
-#        S1_conf=S1_conf
-#    S1.to_csv('../'+design+'/Duration_Sensitivity_analysis/'+ ID + '_S1.csv')
-#    S1_conf.to_csv('../'+design+'/Duration_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
-#    DELTA.to_csv('../'+design+'/Duration_Sensitivity_analysis/'+ ID + '_DELTA.csv')
-#    DELTA_conf.to_csv('../'+design+'/Duration_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
-#
-#    # OLS regression analysis
-#    dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
-#    #Perform for mean duration
-#    dta['Shortage']=np.mean(d_synth, axis = 0)
-#    for m in range(params_no):
-#        predictors = dta.columns.tolist()[m:(m+1)]
-#        result = fitOLS(dta, predictors)
-#        R2_scores.at[param_names[m],0]=result.rsquared
-#    R2_scores.to_csv('../'+design+'/Duration_Sensitivity_analysis/'+ ID + '_mean_R2.csv')
-#    #Perform for median duration
-#    dta['Shortage']=np.median(d_synth, axis = 0)
-#    for m in range(params_no):
-#        predictors = dta.columns.tolist()[m:(m+1)]
-#        result = fitOLS(dta, predictors)
-#        R2_scores.at[param_names[m],0]=result.rsquared
-#    R2_scores.to_csv('../'+design+'/Duration_Sensitivity_analysis/'+ ID + '_median_R2.csv')
-#    #Perform for max duration
-#    dta['Shortage']=np.max(d_synth, axis = 0)
-#    for m in range(params_no):
-#        predictors = dta.columns.tolist()[m:(m+1)]
-#        result = fitOLS(dta, predictors)
-#        R2_scores.at[param_names[m],0]=result.rsquared
-#    R2_scores.to_csv('../'+design+'/Duration_Sensitivity_analysis/'+ ID + '_max_R2.csv')
+
 
 # =============================================================================
 # Start parallelization (running each structure in parallel)
