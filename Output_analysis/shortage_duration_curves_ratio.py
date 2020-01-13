@@ -38,7 +38,9 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
     f_hist_d = np.reshape(histData_demand, (int(np.size(histData_demand)/n), n))
     f_hist_s = np.reshape(histData_shortage, (int(np.size(histData_shortage)/n), n))
     #Reshape to annual totals
-    f_hist_totals_ratio = np.sum(f_hist_s,1)/np.sum(f_hist_d,1)
+    hist_annualdemands = np.sum(f_hist_s,1)
+    hist_annualshortages = np.sum(f_hist_d,1)
+    f_hist_totals_ratio = np.divide(hist_annualshortages, hist_annualdemands, out=np.zeros_like(hist_annualshortages), where=hist_annualdemands!=0)
     #Calculate historical shortage duration curves
     F_hist = np.sort(f_hist_totals_ratio) # for inverse sorting add this at the end [::-1]
     
@@ -104,7 +106,10 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
         # Count consecutive years of shortage
         for i in range(samples*realizations):
             multi_year_durations[i] = shortage_duration(synthetic_global_totals_ratio[:,i],t/10)
-            worst_dur_percentile[t,i] = np.max(multi_year_durations[i])
+            if multi_year_durations[i]:
+                worst_dur_percentile[t,i] = np.max(multi_year_durations[i])
+            else:
+                worst_dur_percentile[t,i] = 0
         hist_durations = shortage_duration(f_hist_totals_ratio,t/10)
         p_i=p[::-1]
         hist_durations_percentiles = np.zeros([len(p_i)])
@@ -131,7 +136,7 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
             labels.append(label)
         ax1.plot(p_i,hist_durations_percentiles, c='black', linewidth=2, label='Historical record')
         ax1.set_xlim(0,100)
-        ax1.sex_ylim(0,y_lim)
+        ax1.set_ylim(0,y_lim)
         ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
         ax1.set_xlabel('Duration percentile', fontsize=20)
         ax1.set_ylabel('Years of continuous shortages of above '+str(t*10)+'%', fontsize=20)
