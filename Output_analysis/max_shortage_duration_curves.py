@@ -63,6 +63,13 @@ def plotSDC(synthetic, histData, structure_name):
     synthetic_global_totals = np.sum(synthetic_global,1) 
     
     p=np.arange(100,-10,-10)
+    p_i = p[::-1]
+    
+    hist_max_durations = np.zeros(len(p_i))
+    for i in range(len(p_i)):
+        durations = shortage_duration(F_hist, np.percentile(F_hist,p_i[i]))
+        if durations:
+            hist_max_durations[i]=np.max(durations)
     
     #Calculate synthetic shortage duration curves
     F_syn = np.empty([int(np.size(histData)/n),samples])

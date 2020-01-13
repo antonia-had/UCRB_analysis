@@ -66,9 +66,9 @@ def plotSDC(synthetic, histData, structure_name):
     p=np.arange(100,-10,-10)
     
     #Calculate synthetic shortage duration curves
-    F_syn = np.empty([int(np.size(histData)/n),samples])
+    F_syn = np.empty([int(np.size(histData)/n),samples*realizations])
     F_syn[:] = np.NaN
-    for j in range(samples):
+    for j in range(samples*realizations):
         F_syn[:,j] = np.sort(synthetic_global_totals[:,j])
     
     # For each percentile of magnitude, calculate the percentile among the experiments ran
