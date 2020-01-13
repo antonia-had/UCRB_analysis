@@ -14,7 +14,6 @@ plt.ioff()
 design = str(sys.argv[1])
 
 
-transbasin = np.genfromtxt('../Structures_files/TBD.txt',dtype='str').tolist()
 all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
 nStructures = len(all_IDs)
 # Longform parameter names to use in figure legend
@@ -39,7 +38,7 @@ def alpha(i, base=0.2):
     for j in range(i):
         ar.append(l(ar[-1]))
     return ar[-1]
-  
+
 def shortage_duration(sequence, threshold):
     cnt_shrt = [sequence[i]>threshold for i in range(len(sequence))] # Returns a list of True values when there's a shortage
     shrt_dur = [ sum( 1 for _ in group ) for key, group in itertools.groupby( cnt_shrt ) if key ] # Counts groups of True values

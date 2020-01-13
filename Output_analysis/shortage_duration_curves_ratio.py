@@ -73,43 +73,38 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
     P = np.arange(1.,len(F_hist)+1)*100 / len(F_hist)
     
     
-    fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
-    # ax1
-    handles = []
-    labels=[]
-    color = '#000292'
-    for i in range(len(p)):
-        ax1.fill_between(P, np.min(F_syn[:,:],1), np.percentile(F_syn[:,:], p[i], axis=1), color=color, alpha = 0.1)
-        ax1.plot(P, np.percentile(F_syn[:,:], p[i], axis=1), linewidth=0.5, color=color, alpha = 0.3)
-        handle = matplotlib.patches.Rectangle((0,0),1,1, color=color, alpha=alpha(i, base=0.1))
-        handles.append(handle)
-        label = "{:.0f} %".format(100-p[i])
-        labels.append(label)
-    ax1.plot(P,F_hist, c='black', linewidth=2, label='Historical record')
-    ax1.set_ylim(0,0.1)
-    ax1.set_xlim(0,100)
-    #ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
-    ax1.legend(fontsize=8, loc='upper left')
-    ax1.set_xlabel('Shortage ratio percentile', fontsize=12)
-    ax1.set_ylabel('Ration of annual shortage to annual demand', fontsize=12)
-
-    fig.suptitle('Shortage ratio for ' + structure_name, fontsize=16)
-    plt.subplots_adjust(bottom=0.2)
-    fig.savefig('../'+design+'/RatioShortageCurves/' + structure_name + '.svg')
-    fig.savefig('../'+design+'/RatioShortageCurves/' + structure_name + '.png')
-    fig.clf()
+#    fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
+#    # ax1
+#    handles = []
+#    labels=[]
+#    color = '#000292'
+#    for i in range(len(p)):
+#        ax1.fill_between(P, np.min(F_syn[:,:],1), np.percentile(F_syn[:,:], p[i], axis=1), color=color, alpha = 0.1)
+#        ax1.plot(P, np.percentile(F_syn[:,:], p[i], axis=1), linewidth=0.5, color=color, alpha = 0.3)
+#        handle = matplotlib.patches.Rectangle((0,0),1,1, color=color, alpha=alpha(i, base=0.1))
+#        handles.append(handle)
+#        label = "{:.0f} %".format(100-p[i])
+#        labels.append(label)
+#    ax1.plot(P,F_hist, c='black', linewidth=2, label='Historical record')
+#    ax1.set_ylim(0,0.1)
+#    ax1.set_xlim(0,100)
+#    #ax1.legend(handles=handles, labels=labels, framealpha=1, fontsize=8, loc='upper left', title='Frequency in experiment',ncol=2)
+#    ax1.legend(fontsize=8, loc='upper left')
+#    ax1.set_xlabel('Shortage ratio percentile', fontsize=12)
+#    ax1.set_ylabel('Ration of annual shortage to annual demand', fontsize=12)
+#
+#    fig.suptitle('Shortage ratio for ' + structure_name, fontsize=16)
+#    plt.subplots_adjust(bottom=0.2)
+#    fig.savefig('../'+design+'/ShortagePercentileCurves_Ratio/' + structure_name + '.svg')
+#    fig.savefig('../'+design+'/ShortagePercentileCurves_Ratio/' + structure_name + '.png')
+#    fig.clf()
     
-    y_lim = 0
-    worst_dur_percentile = np.zeros([10,samples*realizations])
     for t in range(10):
         multi_year_durations = [[]]*samples*realizations
         # Count consecutive years of shortage
         for i in range(samples*realizations):
             multi_year_durations[i] = shortage_duration(synthetic_global_totals_ratio[:,i],t/10)
-            if multi_year_durations[i]:
-                worst_dur_percentile[t,i] = np.max(multi_year_durations[i])
-            else:
-                worst_dur_percentile[t,i] = 0
+        y_lim = 0         
         hist_durations = shortage_duration(f_hist_totals_ratio,t/10)
         p_i=p[::-1]
         hist_durations_percentiles = np.zeros([len(p_i)])
@@ -144,7 +139,6 @@ def plotSDC(synthetic_shortage, synthetic_demand, histData_shortage, histData_de
         fig.savefig('../'+design+'/MultiyearShortageCurves/' + structure_name + '_' + str(t*10)+'.svg')
         fig.savefig('../'+design+'/MultiyearShortageCurves/' + structure_name + '_' + str(t*10)+'.png')
         fig.clf()
-    np.save('../'+design+'/MultiyearShortageCurves/' + structure_name + '.npy', worst_dur_percentile)
     
     
 # Begin parallel simulation
