@@ -85,7 +85,8 @@ def sensitivity_analysis_per_structure(ID):
     for i in range(len(percentiles)):
         if syn_magnitude[i,:].any():
             try:
-                result= delta.analyze(problem, np.repeat(LHsamples, realizations, axis = 0), syn_magnitude[i,:], print_to_console=False, num_resamples=10)
+                output = np.mean(syn_magnitude[i,:].reshape(-1, 10), axis=1)
+                result= delta.analyze(problem, LHsamples, output, print_to_console=False, num_resamples=10)
                 DELTA[percentiles[i]]= result['delta']
                 DELTA_conf[percentiles[i]] = result['delta_conf']
                 S1[percentiles[i]]=result['S1']

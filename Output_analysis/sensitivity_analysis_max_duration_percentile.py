@@ -54,7 +54,8 @@ def sensitivity_analysis_per_structure(ID):
         if durations[i].any():
             # Delta Method analysis
             try:
-                result= delta.analyze(problem, np.repeat(LHsamples, realizations, axis = 0), durations[i], print_to_console=False)
+                output = np.mean(durations[i].reshape(-1, 10), axis=1)
+                result= delta.analyze(problem, LHsamples, output, print_to_console=False)
                 DELTA[percentiles[i]]= result['delta']
                 DELTA_conf[percentiles[i]] = result['delta_conf']
                 S1[percentiles[i]]=result['S1']

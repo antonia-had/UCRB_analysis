@@ -62,6 +62,8 @@ def plotSDC(synthetic, histData, structure_name):
         synthetic_global[:,:,j]= np.reshape(synthetic[:,j], (int(np.size(synthetic[:,j])/n), n))
     #Reshape to annual totals
     synthetic_global_totals = np.sum(synthetic_global,1) 
+    print(np.shape(synthetic_global_totals))
+
     
     p=np.arange(100,-10,-10)
     
