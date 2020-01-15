@@ -8,7 +8,7 @@ import sys
 plt.ioff()
 
 design = str(sys.argv[1])
-sensitive_output = str(sys.argv[1])
+sensitive_output = str(sys.argv[2])
 
 transbasin = np.genfromtxt('../Structures_files/TBD.txt',dtype='str').tolist()
 all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()

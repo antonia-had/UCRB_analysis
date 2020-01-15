@@ -7,6 +7,7 @@ from SALib.analyze import delta
 import statsmodels.api as sm
 import scipy.stats
 import math
+from os import path
 
 
 design = str(sys.argv[1])
@@ -39,10 +40,11 @@ def fitOLS(dta, predictors):
     return result
 
 def sensitivity_analysis_per_structure(ID):
+#    if not path.exists('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv'):
     '''
     Perform analysis for max shortage duration at each magnitude
     '''
-    durations = np.load('../'+design+'/MultiyearShortageCurves/' + ID + '.npy')
+    durations = np.load('../'+design+'/Max_Duration_Curves/' + ID + '.npy')
     dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
     DELTA = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     DELTA_conf = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
@@ -52,29 +54,30 @@ def sensitivity_analysis_per_structure(ID):
     DELTA.index=DELTA_conf.index=S1.index=S1_conf.index = R2_scores.index = param_names
     for i in range(len(percentiles)):
         if durations[i].any():
-            # Delta Method analysis
-            try:
-                output = np.mean(durations[i].reshape(-1, 10), axis=1)
-                result= delta.analyze(problem, LHsamples, output, print_to_console=False)
-                DELTA[percentiles[i]]= result['delta']
-                DELTA_conf[percentiles[i]] = result['delta_conf']
-                S1[percentiles[i]]=result['S1']
-                S1_conf[percentiles[i]]=result['S1_conf']
-            except:
-                pass
+#            # Delta Method analysis
+#            try:
+#                output = np.mean(durations[i].reshape(-1, 10), axis=1)
+#                result= delta.analyze(problem, LHsamples, output, print_to_console=False)
+#                DELTA[percentiles[i]]= result['delta']
+#                DELTA_conf[percentiles[i]] = result['delta_conf']
+#                S1[percentiles[i]]=result['S1']
+#                S1_conf[percentiles[i]]=result['S1_conf']
+#            except:
+#                pass
             # OLS regression analysis
             dta['Shortage']=durations[i]
-            R2_scores = pd.DataFrame(np.zeros(params_no))
-            R2_scores.index = param_names
-            for m in range(params_no):
-                predictors = dta.columns.tolist()[m:(m+1)]
-                result = fitOLS(dta, predictors)
-                R2_scores.at[param_names[m],0]=result.rsquared
+            try:
+                for m in range(params_no):
+                    predictors = dta.columns.tolist()[m:(m+1)]
+                    result = fitOLS(dta, predictors)
+                    R2_scores.at[param_names[m],percentiles[i]]=result.rsquared
+            except:
+                pass          
     R2_scores.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_R2.csv')
-    S1.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_S1.csv')
-    S1_conf.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
-    DELTA.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_DELTA.csv')
-    DELTA_conf.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
+#    S1.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_S1.csv')
+#    S1_conf.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
+#    DELTA.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_DELTA.csv')
+#    DELTA_conf.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
         
 # =============================================================================
 # Start parallelization (running each structure in parallel)
