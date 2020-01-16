@@ -1,16 +1,16 @@
 import numpy as np
 
-def writeNewFiles(filename, firstLine, sampleNo, realizationNo, allMonthlyData, version):
+def writeNewFiles(filename, firstLine, sampleNo, realizationNo, allMonthlyData, version, design):
     nSites = np.shape(allMonthlyData)[1]
     
     # split data on periods
-    with open(filename,'r') as f:
+    with open('../Statemod_files/' + filename,'r') as f:
         all_split_data = [x.split('.') for x in f.readlines()]
         
     f.close()
         
     # get unsplit data to rewrite firstLine # of rows
-    with open(filename,'r') as f:
+    with open('../Statemod_files/' + filename,'r') as f:
         all_data = [x for x in f.readlines()]
         
     f.close()
@@ -36,7 +36,7 @@ def writeNewFiles(filename, firstLine, sampleNo, realizationNo, allMonthlyData, 
         # append row of adjusted data
         new_data.append(row_data)
 
-    f = open(filename[0:-4] + '_S' + str(sampleNo) + '_' + str(realizationNo) + version + filename[-4::],'w')
+    f = open('../'+design+'/Experiment_files/'+ filename[0:-4] + '_S' + str(sampleNo) + '_' + str(realizationNo) + version + filename[-4::],'w')
     # write firstLine # of rows as in initial file
     for i in range(firstLine):
         f.write(all_data[i])
