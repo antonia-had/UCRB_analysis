@@ -24,7 +24,7 @@ def plotTimeSeries(TransformedQ, hidden_states):
     fig.subplots_adjust(bottom=0.2)
     handles, labels = plt.gca().get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', ncol=2, frameon=True)
-    fig.savefig('FigureS2a.pdf')
+    fig.savefig('FigureS3a.pdf')
     fig.clf()
     
     return None
@@ -45,7 +45,7 @@ def plotStateCorrelation(TransformedQ, hidden_states, P):
     ax.set_xlabel('Lag (years)')
     
     fig.set_size_inches([9,7.25])
-    fig.savefig('FigureS2b.pdf')
+    fig.savefig('FigureS3b.pdf')
     fig.clf()
         
     return None
