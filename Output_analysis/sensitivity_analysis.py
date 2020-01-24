@@ -49,9 +49,9 @@ for i in range(np.shape(HMMparams)[0]):
         std1 = HMMparams[i,1]
         p00 = HMMparams[i,5]
         p11 = HMMparams[i,4]
-        newParams = np.array([mu0, std0, mu1, std1, p00, p11])
+        newParams = np.array([[mu0, std0, mu1, std1, p00, p11]])
         LHsamples[i,[7,8,9,10,11,12]] = convertParamsToMult(newParams)
-        
+
 param_bounds=np.loadtxt('../Qgen/uncertain_params_'+design[10:-5]+'.txt', usecols=(1,2))
 SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values for base SOW
 samples = len(LHsamples[:,0])

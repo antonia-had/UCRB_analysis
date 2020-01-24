@@ -52,7 +52,7 @@ for i in range(np.shape(HMMparams)[0]):
         std1 = HMMparams[i,1]
         p00 = HMMparams[i,5]
         p11 = HMMparams[i,4]
-        newParams = np.array([mu0, std0, mu1, std1, p00, p11])
+        newParams = np.array([[mu0, std0, mu1, std1, p00, p11]])
         LHsamples[i,[7,8,9,10,11,12]] = convertParamsToMult(newParams)
 
 realizations = 10
