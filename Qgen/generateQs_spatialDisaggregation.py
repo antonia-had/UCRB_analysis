@@ -198,8 +198,9 @@ for i in range(start, stop):
             # select one of k nearest neighbors for each simulated year
             neighbors = np.sort(dists[j,:])[0:int(np.sqrt(np.shape(AnnualQ_h)[0]))]
             indices = np.argsort(dists[j,:])[0:int(np.sqrt(np.shape(AnnualQ_h)[0]))]
+            randnum = random()
             for k in range(1,len(probs)):
-                if random() > probs[k-1] and random() <= probs[k]:
+                if randnum > probs[k-1] and randnum <= probs[k]:
                     neighbor_index = indices[k-1]
            
             # use selected neighbors to downscale flows and demands each year at last node, accounting for time shift of peak

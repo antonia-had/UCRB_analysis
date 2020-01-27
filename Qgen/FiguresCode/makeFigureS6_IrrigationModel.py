@@ -45,7 +45,7 @@ ax.set_xlabel('Annual Flow Anomaly at CO-UT State Line (m^3)',fontsize=16)
 ax.set_ylabel('Annual Total Irrigation Demand Anomaly (m^3)',fontsize=16)
 ax.tick_params(axis='both',labelsize=14)
 fig.set_size_inches([7.33,5.66])
-fig.savefig('FigureS5a.pdf')
+fig.savefig('FigureS6a.pdf')
 fig.clf()
 
 # make sure residuals uncorrelated in time
@@ -57,7 +57,7 @@ ax.set_xlim([0,24])
 ax.set_ylabel('Correlation of Residuals',fontsize=16)
 ax.tick_params(axis='both',labelsize=14)
 fig.set_size_inches([7.67,5.75])
-fig.savefig('FigureS5b.pdf')
+fig.savefig('FigureS6b.pdf')
 fig.clf()
 
 # test if residuals are normally distributed
@@ -74,7 +74,7 @@ plt.plot([-3,3],[-3,3],c='r')
 plt.xlabel('Theoretical Quantiles',fontsize=16)
 plt.ylabel('Residual Quantiles',fontsize=16)
 plt.tick_params(axis='both',labelsize=14)
-plt.savefig('FigureS5c.pdf')
+plt.savefig('FigureS6c.pdf')
 plt.clf()
 
 # make sure residuals homoskedastic
@@ -85,5 +85,5 @@ ax.set_xlabel('Fitted Values',fontsize=16)
 ax.set_ylabel('Residuals',fontsize=16)
 ax.tick_params(axis='both',labelsize=14)
 fig.set_size_inches([7.67,5.75])
-fig.savefig('FigureS5d.pdf')
+fig.savefig('FigureS6d.pdf')
 fig.clf()

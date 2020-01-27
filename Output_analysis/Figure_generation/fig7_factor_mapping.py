@@ -11,6 +11,44 @@ plt.ioff()
 #design = str(sys.argv[1])
 
 LHsamples = np.loadtxt('../../Qgen/' + design + '.txt')
+# convert streamflow multipliers/deltas in LHsamples to HMM parameter values
+def convertMultToParams(multipliers):
+    params = np.zeros(np.shape(multipliers))
+    params[:,0] = multipliers[:,0]*15.258112 # historical dry state mean
+    params[:,1] = multipliers[:,1]*0.259061 # historical dry state std dev
+    params[:,2] = multipliers[:,2]*15.661007 # historical wet state mean
+    params[:,3] = multipliers[:,3]*0.252174 # historical wet state std dev
+    params[:,4] = multipliers[:,4] + 0.679107 # historical dry-dry transition prob
+    params[:,5] = multipliers[:,5] + 0.649169 # historical wet-wet transition prob
+    
+    return params
+
+# convert HMM parameter values to streamflow multipliers/deltas in LHsamples 
+def convertParamsToMult(params):
+    multipliers = np.zeros(np.shape(params))
+    multipliers[:,0] = params[:,0]/15.258112 # historical dry state mean
+    multipliers[:,1] = params[:,1]/0.259061 # historical dry state std dev
+    multipliers[:,2] = params[:,2]/15.661007 # historical wet state mean
+    multipliers[:,3] = params[:,3]/0.252174 # historical wet state std dev
+    multipliers[:,4] = params[:,4] - 0.679107 # historical dry-dry transition prob
+    multipliers[:,5] = params[:,5] - 0.649169 # historical wet-wet transition prob
+    
+    return multipliers
+
+# find SOWs where mu0 > mu1 and swap their wet and dry state parameters
+HMMparams = convertMultToParams(LHsamples[:,[7,8,9,10,11,12]])
+for i in range(np.shape(HMMparams)[0]):
+    if HMMparams[i,0] > HMMparams[i,2]: # dry state mean above wet state mean
+        # swap dry and wet state parameters to correct labels
+        mu0 = HMMparams[i,2]
+        std0 = HMMparams[i,3]
+        mu1 = HMMparams[i,0]
+        std1 = HMMparams[i,1]
+        p00 = HMMparams[i,5]
+        p11 = HMMparams[i,4]
+        newParams = np.array([[mu0, std0, mu1, std1, p00, p11]])
+        LHsamples[i,[7,8,9,10,11,12]] = convertParamsToMult(newParams)
+
 CMIPsamples = np.loadtxt('../../Qgen/CMIP_SOWs.txt') 
 realizations = 10
 param_bounds=np.loadtxt('../../Qgen/uncertain_params_'+design[10:-5]+'.txt', usecols=(1,2))

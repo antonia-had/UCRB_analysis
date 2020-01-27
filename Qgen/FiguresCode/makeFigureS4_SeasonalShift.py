@@ -100,7 +100,7 @@ for shift in shifts:
             ax.set_ylabel('Cumulative Fraction of Annual Flow',fontsize=16)
             ax.tick_params(axis='both',labelsize=14)
             ax.legend([l1,l2,l3,l4],['Gage','Gage Shifted','Natural','Natural Shifted'],loc='lower right',fontsize=14)
-            fig.savefig('FigureS3a.pdf')
+            fig.savefig('FigureS4a.pdf')
             fig.clf()
 
 MonthlyQ = MonthlyQ*1233.48/1E6 # convert Monthly flows to millions of m^3
@@ -127,5 +127,5 @@ cbar = fig.colorbar(sm, cax=cbar_ax)
 cbar.ax.set_ylabel('Shift in Peak (days earlier)',fontsize=16)
 fig.subplots_adjust(right=0.8,left=0.15)
 fig.set_size_inches([8.4,4.8])
-fig.savefig('FigureS3b.pdf')
+fig.savefig('FigureS4b.pdf')
 fig.clf()
