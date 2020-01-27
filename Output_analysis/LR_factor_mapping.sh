@@ -8,6 +8,8 @@
 #SBATCH --output="../output/outputLR.out"
 
 module load python
+module load scipy/3.6
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 module load mpi4py
-module load scipy
-ibrun python LR_factor_mapping.py LHsamples_original_1000
+export MV2_ENABLE_AFFINITY=0y
+ibrun python3 LR_factor_mapping.py LHsamples_original_1000

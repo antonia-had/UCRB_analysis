@@ -63,7 +63,7 @@ param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'Shoshone','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
 
-all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
+all_IDs = ['3600687', '7000550', '7200799', '7200645', '3704614', '7202003']#np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
 nStructures = len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
