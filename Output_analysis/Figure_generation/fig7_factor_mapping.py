@@ -8,7 +8,7 @@ import sys
 plt.switch_backend('agg')
 plt.ioff()
 
-design = str(sys.argv[1])
+#design = str(sys.argv[1])
 
 LHsamples = np.loadtxt('../../Qgen/' + design + '.txt')
 CMIPsamples = np.loadtxt('../../Qgen/CMIP_SOWs.txt') 
@@ -74,14 +74,14 @@ def plotfailureheatmap(ID):
 #            allSOWs[j,h,:]=success
 #            percentSOWs[j,h]=np.mean(success)
 #    np.save('../../'+design+'/Factor_mapping/'+ ID + '_heatmap.npy',allSOWs)
-    allSOWs = np.load('../../'+design+'/Factor_mapping/'+ ID + '_heatmap.npy')
+    allSOWs = np.load(ID + '_heatmap.npy')#'../../'+design+'/Factor_mapping/'+ ID + '_heatmap.npy')
     return(allSOWs)       
 
 def fitLogit(dta, predictors):
     # concatenate intercept column of 1s
     dta['Intercept'] = np.ones(np.shape(dta)[0]) 
     # get columns of predictors
-    cols = dta.columns.tolist()[-1:] + predictors 
+    cols = dta.columns.tolist()[-1:] + predictors + ['Interaction']
     #fit logistic regression
     logit = sm.Logit(dta['Success'], dta[cols], disp=False)
     result = logit.fit() 
@@ -94,13 +94,13 @@ def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid
     X, Y = np.meshgrid(xgrid, ygrid)
     x = X.flatten()
     y = Y.flatten()
-    grid = np.column_stack([np.ones(len(x)),x,y])
+    grid = np.column_stack([np.ones(len(x)),x,y,x*y])
  
     z = result.predict(grid)
     Z = np.reshape(z, np.shape(X))
 
     contourset = ax.contourf(X, Y, Z, levels, cmap=contour_cmap, aspect='auto')
-    #ax.scatter(dta[xvar].values, dta[yvar].values, c=dta['Success'].values, edgecolor='none', cmap=dot_cmap)
+    ax.scatter(dta[xvar].values, dta[yvar].values, c=dta['Success'].values, edgecolor='none', cmap=dot_cmap)
     ax.set_xlim(np.min(xgrid),np.max(xgrid))
     ax.set_ylim(np.min(ygrid),np.max(ygrid))
     ax.set_xlabel(xvar,fontsize=14)
@@ -114,7 +114,7 @@ fig, axes = plt.subplots(3,2, figsize=(18,12))
 freq = [7,1,7,0,2,0]
 mag = [0,7,0,3,6,7]
 heatmaps = [plotfailureheatmap(all_IDs[i])/100 for i in range(len(all_IDs))]
-scores = [pd.read_csv('../../'+design+'/Factor_mapping/'+ all_IDs[i] + '_pseudo_r_scores.csv', sep=",") for i in range(len(all_IDs))]
+scores = [pd.read_csv(all_IDs[i] + '_pseudo_r_scores.csv', sep=",") for i in range(len(all_IDs))]#'../../'+design+'/Factor_mapping/'+ all_IDs[i] + '_pseudo_r_scores.csv', sep=",") for i in range(len(all_IDs))]
 for i in range(len(axes.flat)):
     ax = axes.flat[i]
     allSOWsperformance = heatmaps[int(i/2)]
@@ -140,12 +140,13 @@ for i in range(len(axes.flat)):
     ygrid = np.arange(param_bounds[top_predictors[1]][0], 
                       param_bounds[top_predictors[1]][1], np.around((ranges[1][1]-ranges[1][0])/500,decimals=4))
     all_predictors = [ dta.columns.tolist()[i] for i in top_predictors]
+    dta['Interaction'] = dta[all_predictors[0]]*dta[all_predictors[1]]
     result = fitLogit(dta, [all_predictors[i] for i in [0,1]])  
     contourset = plotContourMap(ax, result, dta, contour_cmap, 
                                 dot_cmap, contour_levels, xgrid, 
                                 ygrid, all_predictors[0], all_predictors[1], base)
 fig.tight_layout()
-fig.savefig('./Paper1_figures/Figure_7_'+design+'.svg')
+fig.savefig('./Paper1_figures/Figure_7_'+design+'.png')
 plt.close()
 
 

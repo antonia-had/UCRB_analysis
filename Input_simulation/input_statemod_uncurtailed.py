@@ -263,25 +263,26 @@ else:
 # =============================================================================
 # Loop though all SOWs
 # =============================================================================
-for k in range(start, stop):
-    for j in range(realizations): 
-        d = {}
-        d['IWR'] = 'cm2015B_S' + str(k+1) + '_' + str(j+1) + 'a.iwr'
-        d['XBM'] = 'cm2015x_S' + str(k+1) + '_' + str(j+1) + '.xbm'
-        d['DDR'] = 'cm2015B_S' + str(k+1) + '.ddr'
-        d['DDM'] = 'cm2015B_S' + str(k+1) + '_' + str(j+1) + '.ddm'
-        d['EVA'] = 'cm2015_S' + str(k+1) + '.eva'
-        d['RES'] = 'cm2015B_S' + str(k+1) + '.res'
-        S1 = template_RSP.safe_substitute(d)
-        f1 = open('../'+design+'/Experiment_files/cm2015B_S' + str(k+1) + '_' + str(j+1) + '.rsp', 'w')
-        f1.write(S1)    
-        f1.close()
-        writenewDDM([irrigation, transbasin, mun_ind, shoshone], 779, k, j)
-        writenewRES([395,348,422,290,580,621], k)
-        writenewDDR([2019,2020,2021], k)
-        writenewEVA(k)
+#for k in range(start, stop):
+#    for j in range(realizations): 
+#        d = {}
+#        d['IWR'] = 'cm2015B_S' + str(k+1) + '_' + str(j+1) + 'a.iwr'
+#        d['XBM'] = 'cm2015x_S' + str(k+1) + '_' + str(j+1) + '.xbm'
+#        d['DDR'] = 'cm2015B_S' + str(k+1) + '.ddr'
+#        d['DDM'] = 'cm2015B_S' + str(k+1) + '_' + str(j+1) + '.ddm'
+#        d['EVA'] = 'cm2015_S' + str(k+1) + '.eva'
+#        d['RES'] = 'cm2015B_S' + str(k+1) + '.res'
+#        S1 = template_RSP.safe_substitute(d)
+#        f1 = open('../'+design+'/Experiment_files/cm2015B_S' + str(k+1) + '_' + str(j+1) + '.rsp', 'w')
+#        f1.write(S1)    
+#        f1.close()
+#        writenewDDM([irrigation, transbasin, mun_ind, shoshone], 779, k, j)
+#        writenewRES([395,348,422,290,580,621], k)
+#        writenewDDR([2019,2020,2021], k)
+#        writenewEVA(k)
         
 os.chdir("../"+design+"/Experiment_files")
 for k in range(start, stop):
     for j in range(realizations): 
-        os.system("./statemod cm2015B_S{}_{} -simulate".format(k+1,j+1))
+        if os.path.getsize("cm2015B_S{}_{}.xdd".format(k+1,j+1))>>20 <500:
+            os.system("./statemod cm2015B_S{}_{} -simulate".format(k+1,j+1))
