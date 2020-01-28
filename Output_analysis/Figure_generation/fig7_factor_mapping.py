@@ -138,7 +138,10 @@ def plotContourMap(ax, result, dta, contour_cmap, dot_cmap, levels, xgrid, ygrid
     Z = np.reshape(z, np.shape(X))
 
     contourset = ax.contourf(X, Y, Z, levels, cmap=contour_cmap, aspect='auto')
-    ax.scatter(dta[xvar].values, dta[yvar].values, c=dta['Success'].values, edgecolor='none', cmap=dot_cmap)
+    xpoints = np.mean(dta[xvar].values.reshape(-1, 10), axis=1)
+    ypoints = np.mean(dta[yvar].values.reshape(-1, 10), axis=1)
+    colors = np.round(np.mean(dta['Success'].values.reshape(-1, 10), axis=1),0)
+    ax.scatter(xpoints, ypoints, c=colors, edgecolor='none', cmap=dot_cmap)
     ax.set_xlim(np.min(xgrid),np.max(xgrid))
     ax.set_ylim(np.min(ygrid),np.max(ygrid))
     ax.set_xlabel(xvar,fontsize=14)
@@ -184,7 +187,7 @@ for i in range(len(axes.flat)):
                                 dot_cmap, contour_levels, xgrid, 
                                 ygrid, all_predictors[0], all_predictors[1], base)
 fig.tight_layout()
-fig.savefig('./Paper1_figures/Figure_7_'+design+'.png')
+fig.savefig('./Paper1_figures/Figure_7_'+design+'.svg')
 plt.close()
 
 

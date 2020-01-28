@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --partition=compute
-#SBATCH --nodes=15 
+#SBATCH --nodes=8 
 #SBATCH --ntasks-per-node=24
 #SBATCH --export=ALL
-#SBATCH -t 1:30:00
+#SBATCH -t 2:00:00
 #SBATCH --job-name="LR"
 #SBATCH --output="../output/outputLR.out"
 
