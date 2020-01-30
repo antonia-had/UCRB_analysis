@@ -157,7 +157,7 @@ def sensitivity_analysis_per_structure(ID):
             for m in range(params_no):
                 predictors = dta.columns.tolist()[m:(m+1)]
                 result = fitOLS(dta, predictors)
-                R2_scores.at[param_names[m],percentiles[i]]=result.rsquared
+                R2_scores.at[param_names[m],p]=result.rsquared
     R2_scores.to_csv('../'+design+'/Frequency_Sensitivity_analysis/'+ ID + '_R2.csv')
 
 

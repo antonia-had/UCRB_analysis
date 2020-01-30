@@ -83,7 +83,7 @@ def plotSDC(structure_name):
         fig, (ax1) = plt.subplots(1,1, figsize=(14.5,8))
         ax1.stackplot(np.arange(0,100), values_to_plot[k], colors = color_list)
         ax1.set_title(titles[k])
-        ax1.set_ylim(0,150)
+        ax1.set_ylim(0,100)
         ax1.set_xlim(0,100)
         handles, labels = ax1.get_legend_handles_labels()
         ax1.set_ylabel(yaxistitles[k], fontsize=12)
