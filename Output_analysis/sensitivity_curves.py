@@ -11,7 +11,7 @@ design = str(sys.argv[1])
 sensitive_output = str(sys.argv[2])
 
 transbasin = np.genfromtxt('../Structures_files/TBD.txt',dtype='str').tolist()
-all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
+all_IDs = ['3600687', '7000550', '7200799', '7200645', '3704614', '7202003']#np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
 nStructures = len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 

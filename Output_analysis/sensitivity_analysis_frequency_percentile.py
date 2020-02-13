@@ -64,7 +64,7 @@ problem = {
     'bounds': param_bounds.tolist()
 }
 percentiles = np.arange(0,100)
-all_IDs = ['3600687', '7000550', '7200799', '7200645', '3704614', '7202003']#np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist() 
+all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist() 
 nStructures = len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
