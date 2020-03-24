@@ -74,7 +74,7 @@ problem = {
     'names': param_names,
     'bounds': param_bounds.tolist()
 }
-percentiles = np.arange(0,101)
+percentiles = np.arange(0,100)
 all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist() 
 nStructures = len(all_IDs)
 
