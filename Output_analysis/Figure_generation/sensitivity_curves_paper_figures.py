@@ -22,7 +22,7 @@ parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss',
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'ShoshoneDMND','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
-percentiles = np.arange(0,100)
+percentiles = np.arange(0,101)
 samples = 1000
 realizations = 10
 idx = np.arange(2,22,2)
