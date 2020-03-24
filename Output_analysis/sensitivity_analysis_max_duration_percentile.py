@@ -12,11 +12,63 @@ from os import path
 
 design = str(sys.argv[1])
 LHsamples = np.loadtxt('../Qgen/' + design + '.txt') 
+# convert streamflow multipliers/deltas in LHsamples to HMM parameter values
+def convertMultToParams(multipliers):
+    params = np.zeros(np.shape(multipliers))
+    params[:,0] = multipliers[:,0]*15.258112 # historical dry state mean
+    params[:,1] = multipliers[:,1]*0.259061 # historical dry state std dev
+    params[:,2] = multipliers[:,2]*15.661007 # historical wet state mean
+    params[:,3] = multipliers[:,3]*0.252174 # historical wet state std dev
+    params[:,4] = multipliers[:,4] + 0.679107 # historical dry-dry transition prob
+    params[:,5] = multipliers[:,5] + 0.649169 # historical wet-wet transition prob
+    
+    return params
+
+# convert HMM parameter values to streamflow multipliers/deltas in LHsamples 
+def convertParamsToMult(params):
+    multipliers = np.zeros(np.shape(params))
+    multipliers[:,0] = params[:,0]/15.258112 # historical dry state mean
+    multipliers[:,1] = params[:,1]/0.259061 # historical dry state std dev
+    multipliers[:,2] = params[:,2]/15.661007 # historical wet state mean
+    multipliers[:,3] = params[:,3]/0.252174 # historical wet state std dev
+    multipliers[:,4] = params[:,4] - 0.679107 # historical dry-dry transition prob
+    multipliers[:,5] = params[:,5] - 0.649169 # historical wet-wet transition prob
+    
+    return multipliers
+
+# find SOWs where mu0 > mu1 and swap their wet and dry state parameters
+HMMparams = convertMultToParams(LHsamples[:,[7,8,9,10,11,12]])
+for i in range(np.shape(HMMparams)[0]):
+    if HMMparams[i,0] > HMMparams[i,2]: # dry state mean above wet state mean
+        # swap dry and wet state parameters to correct labels
+        mu0 = HMMparams[i,2]
+        std0 = HMMparams[i,3]
+        mu1 = HMMparams[i,0]
+        std1 = HMMparams[i,1]
+        p00 = HMMparams[i,5]
+        p11 = HMMparams[i,4]
+        newParams = np.array([[mu0, std0, mu1, std1, p00, p11]])
+        LHsamples[i,[7,8,9,10,11,12]] = convertParamsToMult(newParams)
+
+# Add dummy control variable
+LHsamples = np.concatenate((LHsamples, np.random.rand(1000,1)), axis=1)
 param_bounds=np.loadtxt('../Qgen/uncertain_params_'+design[10:-5]+'.txt', usecols=(1,2))
+# Add dummy control variable bounds
+param_bounds = np.concatenate((param_bounds, [[0,1]]))
+
+SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values for base SOW
+samples = len(LHsamples[:,0])
 realizations = 10
-percentiles = np.arange(0,100)
-param_names=[x.split(' ')[0] for x in open('../Qgen/uncertain_params_'+design[10:-5]+'.txt').readlines()]
 params_no = len(LHsamples[0,:])
+
+rows_to_keep = np.intersect1d(np.where(LHsamples[:,0]>=0)[0],np.where(LHsamples[:,0]<=0)[0])
+for i in range(params_no):
+    within_rows = np.intersect1d(np.where(LHsamples[:,i] > param_bounds[i][0])[0], np.where(LHsamples[:,i] < param_bounds[i][1])[0])
+    rows_to_keep = np.union1d(rows_to_keep,within_rows)
+LHsamples = LHsamples[rows_to_keep,:]
+
+param_names=[x.split(' ')[0] for x in open('../Qgen/uncertain_params_'+design[10:-5]+'.txt').readlines()]+['Controlvariable']
+
 problem = {
     'num_vars': params_no,
     'names': param_names,
