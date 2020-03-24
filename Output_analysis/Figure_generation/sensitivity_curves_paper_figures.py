@@ -43,11 +43,14 @@ def getdata(structure_name):
     delta_conf.set_index(list(delta_conf)[0],inplace=True)
     delta_values = delta_values.clip(lower=0)
     for p in percentiles:
-        # Check if their CI overlaps zero
+        # Check if their CI overlaps zero or if are lower than the dummy
         for param in param_names:
-            if delta_values.at[param,str(p)]<delta_conf.at[param,str(p)]:
+            if delta_values.at[param,str(p)]<delta_conf.at[param,str(p)] or \
+            delta_values.at[param,str(p)]<=delta_values.at['Controlvariable',str(p)]:
                 # If yes, set the index value to zero
                 delta_values.set_value(param,str(p),0)
+    delta_values=delta_values.drop(['Controlvariable'])
+    for p in percentiles:           
         total = np.sum(delta_values[str(p)])
         if total!=0:
             for param in param_names:
@@ -61,11 +64,14 @@ def getdata(structure_name):
     S1_conf.set_index(list(S1_conf)[0],inplace=True)
     S1_values = S1_values.clip(lower=0)
     for p in percentiles:
-        # Check if their CI overlaps zero
+        # Check if their CI overlaps zero or if are lower than the dummy
         for param in param_names:
-            if S1_values.at[param,str(p)]<S1_values.at[param,str(p)]:
+            if S1_values.at[param,str(p)]<S1_values.at[param,str(p)] or \
+            S1_values.at[param,str(p)]<=S1_values.at['Controlvariable',str(p)]:
                 # If yes, set the index value to zero
-                S1_values.set_value(param,str(p),0)        
+                S1_values.set_value(param,str(p),0)
+    S1_values=S1_values.drop(['Controlvariable'])
+    for p in percentiles:
         total = np.sum(S1_values[str(p)])
         if total!=0 and total<1:
             diff = 1-total
@@ -79,6 +85,13 @@ def getdata(structure_name):
     R2_values = pd.read_csv('../../'+design+'/'+sensitive_output+'_Sensitivity_analysis/'+ structure_name + '_R2.csv')
     R2_values.set_index(list(R2_values)[0],inplace=True)
     R2_values = R2_values.clip(lower=0)
+    for p in percentiles:
+        # Check if they are lower than the dummy
+        for param in param_names:
+            if R2_values.at[param,str(p)]<=R2_values.at['Controlvariable',str(p)]:
+                # If yes, set the index value to zero
+                R2_values.set_value(param,str(p),0)
+    R2_values=R2_values.drop(['Controlvariable'])
     for p in percentiles:
         total = np.sum(R2_values[str(p)])
         if total!=0 and total<1:

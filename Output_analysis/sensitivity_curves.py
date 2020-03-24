@@ -11,7 +11,7 @@ design = str(sys.argv[1])
 sensitive_output = str(sys.argv[2])
 
 transbasin = np.genfromtxt('../Structures_files/TBD.txt',dtype='str').tolist()
-all_IDs = ['3600687', '7000550', '7200799', '7200645', '3704614', '7202003']#np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
+all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
 nStructures = len(all_IDs)
 # Longform parameter names to use in figure legend
 parameter_names_long = ['Min','IWR demand mutliplier', 'Reservoir loss', 
@@ -47,7 +47,7 @@ def plotSDC(structure_name):
             delta_values.at[param,str(p)]<=delta_values.at['Controlvariable',str(p)]:
                 # If yes, set the index value to zero
                 delta_values.set_value(param,str(p),0)
-    delta_values=delta_values.drop(['Controlvariable'], inplace=True)
+    delta_values=delta_values.drop(['Controlvariable'])
     for p in percentiles:           
         total = np.sum(delta_values[str(p)])
         if total!=0:
@@ -68,7 +68,7 @@ def plotSDC(structure_name):
             S1_values.at[param,str(p)]<=S1_values.at['Controlvariable',str(p)]:
                 # If yes, set the index value to zero
                 S1_values.set_value(param,str(p),0)
-    S1_values=S1_values.drop(['Controlvariable'], inplace=True)
+    S1_values=S1_values.drop(['Controlvariable'])
     for p in percentiles:
         total = np.sum(S1_values[str(p)])
         if total!=0 and total<1:
@@ -89,7 +89,7 @@ def plotSDC(structure_name):
             if R2_values.at[param,str(p)]<=R2_values.at['Controlvariable',str(p)]:
                 # If yes, set the index value to zero
                 R2_values.set_value(param,str(p),0)
-    R2_values=R2_values.drop(['Controlvariable'], inplace=True)
+    R2_values=R2_values.drop(['Controlvariable'])
     for p in percentiles:
         total = np.sum(R2_values[str(p)])
         if total!=0 and total<1:
