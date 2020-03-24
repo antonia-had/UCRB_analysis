@@ -36,9 +36,16 @@ def plotSDC(structure_name):
     '''
     
     delta_values = pd.read_csv('../'+design+'/'+sensitive_output+'_Sensitivity_analysis/'+ structure_name + '_DELTA.csv')
+    delta_conf = pd.read_csv('../'+design+'/'+sensitive_output+'_Sensitivity_analysis/'+ structure_name + '_DELTA_conf.csv')
     delta_values.set_index(list(delta_values)[0],inplace=True)
+    delta_conf.set_index(list(delta_conf)[0],inplace=True)
     delta_values = delta_values.clip(lower=0)
     for p in percentiles:
+        # Check if their CI overlaps zero
+        for param in param_names:
+            if delta_values.at[param,str(p)]<delta_conf.at[param,str(p)]:
+                # If yes, set the index value to zero
+                delta_values.set_value(param,str(p),0)
         total = np.sum(delta_values[str(p)])
         if total!=0:
             for param in param_names:
@@ -47,9 +54,16 @@ def plotSDC(structure_name):
     delta_values_to_plot = delta_values.values.tolist()
     
     S1_values = pd.read_csv('../'+design+'/'+sensitive_output+'_Sensitivity_analysis/'+ structure_name + '_S1.csv')
+    S1_conf = pd.read_csv('../'+design+'/'+sensitive_output+'_Sensitivity_analysis/'+ structure_name + '_S1_conf.csv')
     S1_values.set_index(list(S1_values)[0],inplace=True)
+    S1_conf.set_index(list(S1_conf)[0],inplace=True)
     S1_values = S1_values.clip(lower=0)
     for p in percentiles:
+        # Check if their CI overlaps zero
+        for param in param_names:
+            if S1_values.at[param,str(p)]<S1_values.at[param,str(p)]:
+                # If yes, set the index value to zero
+                S1_values.set_value(param,str(p),0)        
         total = np.sum(S1_values[str(p)])
         if total!=0 and total<1:
             diff = 1-total
@@ -74,7 +88,7 @@ def plotSDC(structure_name):
         R2_values[column] = R2_values[column]*100
     R2_values_to_plot = R2_values.values.tolist()
     
-    color_list = ["#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#32B3F7","#F77632"]  
+    color_list = ["#ff8000", "#b15a29", "#693c99", "#ffff98", "#680c0e", "#a8cfe5", "#fcbd6d", "#e2171a", "#f99998", "#32a02c", "#b2df8a", "#1b77b3", "#104162", "#1b5718","#cbb3d7"]  
                   
     values_to_plot = [delta_values_to_plot, S1_values_to_plot, R2_values_to_plot]
     titles = ["Delta","S1","R2"]

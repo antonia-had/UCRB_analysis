@@ -8,7 +8,7 @@ years = 105
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'ShoshoneDMND','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
-color_list = ["#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#32B3F7","#F77632"]  
+color_list = ["#ff8000", "#b15a29", "#693c99", "#ffff98", "#680c0e", "#a8cfe5", "#fcbd6d", "#e2171a", "#f99998", "#32a02c", "#b2df8a", "#1b77b3", "#104162", "#1b5718","#cbb3d7"]  
 area_colors = ["#F4FAFF","white"]
         
 
@@ -46,7 +46,7 @@ agg_rights = agg_rights.reindex(list(demands.index))
 agg_rights['WD'] = [int(ID[:2]) for ID in list(agg_rights.index)]
 wdcounts = agg_rights['WD'].value_counts().sort_index()
 
-indices = pd.read_csv('2002_DELTA_freq.csv',index_col=0)
+indices = pd.read_csv('2002_DELTA_max_duration.csv',index_col=0)
 indices['1stFactor'] = indices.idxmax(axis=1)
 colors = [color_list[param_names.index(f)] for f in indices['1stFactor'].values]
 
@@ -54,8 +54,8 @@ ratio2002 = np.divide(yearly_shortages[:,93],yearly_demands[:,93],
                       out=np.zeros_like(yearly_shortages[:,93]), where=yearly_demands[:,93]!=0)
 #agg_rights['Source'] = agg_rights['Source'].fillna('')
 
-#order=np.argsort(agg_rights['WD'].values)
-order=np.argsort(agg_rights['Admin'].values)
+order=np.argsort(agg_rights['WD'].values)
+#order=np.argsort(agg_rights['Admin'].values)
 #order=np.argsort(ratio2002)
 
 ratio2002_sorted = ratio2002[order]
@@ -68,12 +68,12 @@ theta=np.arange(0,2*np.pi-width,width)
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_axes([0.1, 0.1, 0.75, 0.75], polar=True)
 bars = ax.bar(theta, ratio2002_sorted, color=colors_sorted, width=width,zorder=5)
-#total=0
-#for i in range(len(wdcounts.values)):
-#    count=wdcounts.values[i]
-#    total+=count
-#    ax.fill_between(np.linspace(2*np.pi*(total-count)/iN,2*np.pi*(total/iN),100),0,1, facecolor=area_colors[np.mod(i,2)],zorder=1)
-#    ax.axvline(2*np.pi*(total/iN),linewidth=1,linestyle = '--', color='gray',zorder=2)
+total=0
+for i in range(len(wdcounts.values)):
+    count=wdcounts.values[i]
+    total+=count
+    ax.fill_between(np.linspace(2*np.pi*(total-count)/iN,2*np.pi*(total/iN),100),0,1, facecolor=area_colors[np.mod(i,2)],zorder=1)
+    ax.axvline(2*np.pi*(total/iN),linewidth=1,linestyle = '--', color='gray',zorder=2)
 ax.set_xticks([0])
 ax.set_ylim(0,1)
 #ax.get_xaxis().set_visible(False)

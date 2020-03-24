@@ -8,7 +8,7 @@ years = 105
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'ShoshoneDMND','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
-color_list = ["#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#32B3F7","#F77632"]  
+color_list = ["#ff8000", "#b15a29", "#693c99", "#ffff98", "#680c0e", "#a8cfe5", "#fcbd6d", "#e2171a", "#f99998", "#32a02c", "#b2df8a", "#1b77b3", "#104162", "#1b5718","#cbb3d7"]  
 area_colors = ["#F4FAFF","white"]
         
 

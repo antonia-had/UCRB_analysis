@@ -52,19 +52,23 @@ for i in range(np.shape(HMMparams)[0]):
         newParams = np.array([[mu0, std0, mu1, std1, p00, p11]])
         LHsamples[i,[7,8,9,10,11,12]] = convertParamsToMult(newParams)
 
+# Add dummy control variable
+LHsamples = np.concatenate((LHsamples, np.random.rand(1000,1)), axis=1)
 param_bounds=np.loadtxt('../Qgen/uncertain_params_'+design[10:-5]+'.txt', usecols=(1,2))
+# Add dummy control variable bounds
+param_bounds = np.concatenate((param_bounds, [[0,1]]))
 SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values for base SOW
 samples = len(LHsamples[:,0])
 realizations = 10
 params_no = len(LHsamples[0,:])
-param_names=[x.split(' ')[0] for x in open('../Qgen/uncertain_params_'+design[10:-5]+'.txt').readlines()]
+param_names=[x.split(' ')[0] for x in open('../Qgen/uncertain_params_'+design[10:-5]+'.txt').readlines()]+['Controlvariable']
 problem = {
     'num_vars': params_no,
     'names': param_names,
     'bounds': param_bounds.tolist()
 }
 percentiles = np.arange(0,100)
-all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist() 
+all_IDs = ['3600687', '7000550', '7200799', '7200645', '3704614', '7202003']#np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist() 
 nStructures = len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
