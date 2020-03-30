@@ -61,10 +61,10 @@ samples = len(LHsamples[:,0])
 realizations = 10
 params_no = len(LHsamples[0,:])
 
-rows_to_keep = np.intersect1d(np.where(LHsamples[:,0]>=0)[0],np.where(LHsamples[:,0]<=0)[0])
+rows_to_keep = list(np.arange(1000))
 for i in range(params_no):
     within_rows = np.intersect1d(np.where(LHsamples[:,i] > param_bounds[i][0])[0], np.where(LHsamples[:,i] < param_bounds[i][1])[0])
-    rows_to_keep = np.union1d(rows_to_keep,within_rows)
+    rows_to_keep = np.intersect1d(rows_to_keep,within_rows)
 LHsamples = LHsamples[rows_to_keep,:]
 
 param_names=[x.split(' ')[0] for x in open('../Qgen/uncertain_params_'+design[10:-5]+'.txt').readlines()]+['Controlvariable']
@@ -98,7 +98,7 @@ def sensitivity_analysis_per_structure(ID):
     Perform analysis for max shortage duration at each magnitude
     '''
     durations = np.load('../'+design+'/Max_Duration_Curves/' + ID + '.npy')
-    dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
+    dta = pd.DataFrame(data = LHsamples, columns=param_names)
     DELTA = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     DELTA_conf = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
     S1 = pd.DataFrame(np.zeros((params_no, len(percentiles))), columns = percentiles)
@@ -107,18 +107,19 @@ def sensitivity_analysis_per_structure(ID):
     DELTA.index=DELTA_conf.index=S1.index=S1_conf.index = R2_scores.index = param_names
     for i in range(len(percentiles)):
         if durations[i].any():
-#            # Delta Method analysis
-#            try:
-#                output = np.mean(durations[i].reshape(-1, 10), axis=1)
-#                result= delta.analyze(problem, LHsamples, output, print_to_console=False)
-#                DELTA[percentiles[i]]= result['delta']
-#                DELTA_conf[percentiles[i]] = result['delta_conf']
-#                S1[percentiles[i]]=result['S1']
-#                S1_conf[percentiles[i]]=result['S1_conf']
-#            except:
-#                pass
+            output = np.mean(durations[i].reshape(-1, 10), axis=1)
+            output = output[rows_to_keep]
+            # Delta Method analysis
+            try:
+                result= delta.analyze(problem, LHsamples, output, print_to_console=False)
+                DELTA[percentiles[i]]= result['delta']
+                DELTA_conf[percentiles[i]] = result['delta_conf']
+                S1[percentiles[i]]=result['S1']
+                S1_conf[percentiles[i]]=result['S1_conf']
+            except:
+                pass
             # OLS regression analysis
-            dta['Shortage']=durations[i]
+            dta['Shortage']=output
             try:
                 for m in range(params_no):
                     predictors = dta.columns.tolist()[m:(m+1)]
@@ -127,10 +128,10 @@ def sensitivity_analysis_per_structure(ID):
             except:
                 pass          
     R2_scores.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_R2.csv')
-#    S1.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_S1.csv')
-#    S1_conf.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
-#    DELTA.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_DELTA.csv')
-#    DELTA_conf.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
+    S1.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_S1.csv')
+    S1_conf.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
+    DELTA.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_DELTA.csv')
+    DELTA_conf.to_csv('../'+design+'/Max_Duration_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
         
 # =============================================================================
 # Start parallelization (running each structure in parallel)

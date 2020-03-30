@@ -63,10 +63,10 @@ samples = len(LHsamples[:,0])
 realizations = 10
 params_no = len(LHsamples[0,:])
 
-rows_to_keep = np.intersect1d(np.where(LHsamples[:,0]>=0)[0],np.where(LHsamples[:,0]<=0)[0])
+rows_to_keep = list(np.arange(1000))
 for i in range(params_no):
     within_rows = np.intersect1d(np.where(LHsamples[:,i] > param_bounds[i][0])[0], np.where(LHsamples[:,i] < param_bounds[i][1])[0])
-    rows_to_keep = np.union1d(rows_to_keep,within_rows)
+    rows_to_keep = np.intersect1d(rows_to_keep,within_rows)
 LHsamples = LHsamples[rows_to_keep,:]
 
 param_names=[x.split(' ')[0] for x in open('../Qgen/uncertain_params_'+design[10:-5]+'.txt').readlines()]+['Controlvariable']
@@ -76,7 +76,7 @@ problem = {
     'bounds': param_bounds.tolist()
 }
 percentiles = np.arange(0,100)
-all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist() 
+all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist()
 nStructures = len(all_IDs)
 
 # deal with fact that calling result.summary() in statsmodels.api
@@ -148,6 +148,7 @@ def sensitivity_analysis_per_structure(ID):
         if HIS_magnitude[p]>0:
             try:
                 output = np.mean(syn_magnitude[p,:].reshape(-1, 10), axis=1)
+                output = output[rows_to_keep]
                 result= delta.analyze(problem, LHsamples, output, print_to_console=False, num_resamples=10)
                 DELTA[p]= result['delta']
                 DELTA_conf[p] = result['delta_conf']
@@ -162,10 +163,11 @@ def sensitivity_analysis_per_structure(ID):
     DELTA_conf.to_csv('../'+design+'/Frequency_Sensitivity_analysis/'+ ID + '_DELTA_conf.csv')
 
     # OLS regression analysis
-    dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
+    dta = pd.DataFrame(data = LHsamples, columns=param_names)
     for p in percentiles:
         if HIS_magnitude[p]>0:
-            dta['Shortage']=syn_magnitude[p,:]
+            output = np.mean(syn_magnitude[p,:].reshape(-1, 10), axis=1)
+            dta['Shortage']=output[rows_to_keep]
             for m in range(params_no):
                 predictors = dta.columns.tolist()[m:(m+1)]
                 result = fitOLS(dta, predictors)

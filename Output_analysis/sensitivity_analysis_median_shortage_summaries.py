@@ -11,18 +11,10 @@ sensitive_output = str(sys.argv[2])
 idx = np.arange(2,22,2)
 
 LHsamples = np.loadtxt('../Qgen/' + design + '.txt') 
-
-param_bounds=np.loadtxt('../Qgen/uncertain_params_'+design[10:-5]+'.txt', usecols=(1,2))
-SOW_values = np.array([1,1,1,1,0,0,1,1,1,1,1,0,0,0]) #Default parameter values for base SOW
 samples = len(LHsamples[:,0])
-realizations = 10
-params_no = len(LHsamples[0,:])
-param_names=[x.split(' ')[0] for x in open('../Qgen/uncertain_params_'+design[10:-5]+'.txt').readlines()]
-problem = {
-    'num_vars': params_no,
-    'names': param_names,
-    'bounds': param_bounds.tolist()
-}
+params_no = len(LHsamples[0,:])+1
+param_names=[x.split(' ')[0] for x in open('../Qgen/uncertain_params_'+design[10:-5]+'.txt').readlines()]+["Controlvariable"]
+
 percentiles = np.arange(0,100)
 all_IDs = np.genfromtxt('../Structures_files/metrics_structures.txt',dtype='str').tolist() 
 nStructures = len(all_IDs)

@@ -19,7 +19,7 @@ years = 105
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'ShoshoneDMND','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
              'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
-color_list = ["#F18670", "#E24D3F", "#CF233E", "#681E33", "#676572", "#F3BE22", "#59DEBA", "#14015C", "#DAF8A3", "#0B7A0A", "#F8FFA2", "#578DC0", "#4E4AD8", "#32B3F7","#F77632"]  
+color_list = ["#ff8000", "#b15a29", "#693c99", "#ffff98", "#680c0e", "#a8cfe5", "#fcbd6d", "#e2171a", "#f99998", "#32a02c", "#b2df8a", "#1b77b3", "#104162", "#1b5718","#cbb3d7"] 
         
 structures = pd.read_csv('../../Structures_files/modeled_diversions.csv',index_col=0)
 all_IDs = np.genfromtxt('../../Structures_files/metrics_structures_old.txt',dtype='str').tolist()
@@ -57,7 +57,7 @@ structures = structures.reindex(list(demands.index))
 agg_rights['WD'] = [int(ID[:2]) for ID in list(agg_rights.index)]
 wdcounts = agg_rights['WD'].value_counts().sort_index()
 
-indices = pd.read_csv('2002_DELTA_max_duration.csv',index_col=0)
+indices = pd.read_csv('2002_DELTA_freq.csv',index_col=0)
 indices['1stFactor'] = indices.idxmax(axis=1)
 indices = indices.reindex(list(demands.index))
 colors = [color_list[param_names.index(f)] for f in indices['1stFactor'].values]

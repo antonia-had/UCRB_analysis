@@ -43,7 +43,7 @@ agg_rights = agg_rights.reindex(list(demands.index))
 agg_rights['WD'] = [int(ID[:2]) for ID in list(agg_rights.index)]
 wdcounts = agg_rights['WD'].value_counts().sort_index()
 
-indices = pd.read_csv('median_DELTA_freq.csv',index_col=0)
+indices = pd.read_csv('median_DELTA_max_duration.csv',index_col=0)
 indices['1stFactor'] = indices.idxmax(axis=1)
 colors = [color_list[param_names.index(f)] for f in indices['1stFactor'].values]
 
@@ -51,8 +51,8 @@ ratio2002 = np.divide(yearly_shortages[:,medianyear],yearly_demands[:,medianyear
                       out=np.zeros_like(yearly_shortages[:,medianyear]), where=yearly_demands[:,medianyear]!=0)
 #agg_rights['Source'] = agg_rights['Source'].fillna('')
 
-order=np.argsort(agg_rights['WD'].values)
-#order=np.argsort(agg_rights['Admin'].values)
+#order=np.argsort(agg_rights['WD'].values)
+order=np.argsort(agg_rights['Admin'].values)
 #order=np.argsort(ratio2002)
 
 ratio2002_sorted = ratio2002[order]
@@ -65,12 +65,12 @@ theta=np.arange(0,2*np.pi-width,width)
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_axes([0.1, 0.1, 0.75, 0.75], polar=True)
 bars = ax.bar(theta, ratio2002_sorted, color=colors_sorted, width=width,zorder=5)
-total=0
-for i in range(len(wdcounts.values)):
-    count=wdcounts.values[i]
-    total+=count
-    ax.fill_between(np.linspace(2*np.pi*(total-count)/iN,2*np.pi*(total/iN),100),0,1, facecolor=area_colors[np.mod(i,2)],zorder=1)
-    ax.axvline(2*np.pi*(total/iN),linewidth=1,linestyle = '--', color='gray',zorder=2)
+#total=0
+#for i in range(len(wdcounts.values)):
+#    count=wdcounts.values[i]
+#    total+=count
+#    ax.fill_between(np.linspace(2*np.pi*(total-count)/iN,2*np.pi*(total/iN),100),0,1, facecolor=area_colors[np.mod(i,2)],zorder=1)
+#    ax.axvline(2*np.pi*(total/iN),linewidth=1,linestyle = '--', color='gray',zorder=2)
 ax.set_xticks([0])
 ax.set_ylim(0,1)
 #ax.get_xaxis().set_visible(False)
