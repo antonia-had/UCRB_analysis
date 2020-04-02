@@ -109,7 +109,10 @@ def setupProblem(design):
 param_bounds, param_names, params_no, problem = setupProblem(design)
 samples, rows_to_keep = getSamples(design, params_no, param_bounds)
 RealSpaceSamples = convertLogMultToRealMult(samples)
-
+SOWstokeep=[]
+for row in rows_to_keep:
+    for i in range(10):
+        SOWstokeep.append(row*10+i)
 LHsamples[:,7:13]=RealSpaceSamples
 
 realizations = 10
@@ -225,8 +228,9 @@ scores = [pd.read_csv(all_IDs[i] + '_pseudo_r_scores.csv', sep=",") for i in ran
 for i in range(len(axes.flat)):
     ax = axes.flat[i]
     allSOWsperformance = heatmaps[int(i/2)]
+    allSOWsperformance = allSOWsperformance[:,:,SOWstokeep]
     all_pseudo_r_scores = scores[int(i/2)]
-    dta = pd.DataFrame(data = np.repeat(LHsamples, realizations, axis = 0), columns=param_names)
+    dta = pd.DataFrame(data = np.repeat(LHsamples[rows_to_keep,:], realizations, axis = 0), columns=param_names)
     dta['Success']=allSOWsperformance[freq[i],mag[i],:]
     pseudo_r_scores=all_pseudo_r_scores[str(frequencies[freq[i]])+'yrs_'+str(magnitudes[mag[i]])+'prc'].values
     top_predictors = np.argsort(pseudo_r_scores)[::-1][:2] #Sort scores and pick top 2 predictors
