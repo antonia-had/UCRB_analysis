@@ -1,0 +1,14 @@
+IWRmultiplier 0.5 1.5
+RESloss 0.8 1.0
+TBDmultiplier 0.5 1.5
+M_Imultiplier 0.5 1.5
+ShoshoneDMND 0.0 1.0
+ENVflows 0.0 1.0
+EVAdelta -0.5 1.0
+XBM_mu0 0.99 1.01
+XBM_sigma0 0.85 1.15
+XBM_mu1 0.99 1.01
+XBM_sigma1 0.85 1.15
+XBM_p00 -0.3 0.3
+XBM_p11 -0.3 0.3
+shift 0 45
