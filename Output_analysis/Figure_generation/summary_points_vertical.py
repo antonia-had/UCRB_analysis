@@ -65,7 +65,10 @@ colors_sorted = [colors[i] for i in order]
 
 fig = plt.figure(figsize=(8, 8))
 ax = plt.axes()
-bars = ax.barh(np.arange(1, len(ratio2002)+1), ratio2002_sorted, color=colors_sorted)
+lines = ax.plot(ratio2002_sorted, np.arange(1, len(ratio2002)+1), 
+                color='lightgrey',linestyle=':',alpha=0.5, zorder=5)
+points = ax.scatter(ratio2002_sorted, np.arange(1, len(ratio2002)+1),
+                marker='o',s=40,c =colors_sorted,zorder=1)
 ax.set_xlim(0,1)
 ax.set_ylim(0,len(ratio2002))
 ax.set_yticks(np.arange(1, len(ratio2002)+1,50))
