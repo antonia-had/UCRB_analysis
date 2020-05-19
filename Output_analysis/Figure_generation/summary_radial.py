@@ -7,10 +7,10 @@ months = 12
 years = 105
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'ShoshoneDMND','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
-             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
-color_list = ["#ff8000", "#b15a29", "#693c99", "#ffff98", "#680c0e", "#a8cfe5", "#fcbd6d", "#e2171a", "#f99998", "#32a02c", "#b2df8a", "#1b77b3", "#104162", "#1b5718","#cbb3d7"]  
-area_colors = ["#F4FAFF","white"]
-        
+             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift', 'Interactions', 'N/A']
+color_list = ["#ff8000", "#b15a29", "#17BECF", "#ffff98", 
+              "#7B4173", "#31A354", "#fcbd6d", "#e2171a", "#f99998", 
+              "#1F77B4", "#AEC7E8", "#843C39", "#104162", "#BD9E39","#D9D9D9","black"]           
 
 all_IDs = np.genfromtxt('../../Structures_files/metrics_structures_old.txt',dtype='str').tolist()
 demands = pd.read_csv('../../Summary_info/demands_uncurtailed.csv',header = None, index_col=False)
@@ -46,8 +46,10 @@ agg_rights = agg_rights.reindex(list(demands.index))
 agg_rights['WD'] = [int(ID[:2]) for ID in list(agg_rights.index)]
 wdcounts = agg_rights['WD'].value_counts().sort_index()
 
-indices = pd.read_csv('2002_DELTA_freq.csv',index_col=0)
+indices = pd.read_csv('2002_DELTA_max_duration.csv',index_col=0)
+indices.insert(0, 'N/A', 0)
 indices['1stFactor'] = indices.idxmax(axis=1)
+indices = indices.reindex(list(demands.index))
 colors = [color_list[param_names.index(f)] for f in indices['1stFactor'].values]
 
 ratio2002 = np.divide(yearly_shortages[:,93],yearly_demands[:,93],
@@ -77,3 +79,4 @@ bars = ax.bar(theta, ratio2002_sorted, color=colors_sorted, width=width,zorder=5
 ax.set_xticks([0])
 ax.set_ylim(0,1)
 #ax.get_xaxis().set_visible(False)
+plt.show()

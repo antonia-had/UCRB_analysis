@@ -10,7 +10,7 @@ from cartopy.feature import ShapelyFeature
 extent = [-109.069,-105.6,38.85,40.50]
 extent_large = [-111.0,-101.0,36.5,41.5]
 #rivers_10m = cpf.NaturalEarthFeature('physical', 'rivers_lake_centerlines', '10m')
-tiles = cimgt.StamenTerrain(style='terrain')
+#tiles = cimgt.StamenTerrain()
 shape_feature = ShapelyFeature(Reader('../../Structures_files/Shapefiles/Water_Districts.shp').geometries(), ccrs.PlateCarree(), edgecolor='black', facecolor='None')
 flow_feature = ShapelyFeature(Reader('../../Structures_files/Shapefiles/UCRBstreams.shp').geometries(), ccrs.PlateCarree(), edgecolor='royalblue', facecolor='None')
 
@@ -18,8 +18,10 @@ months = 12
 years = 105
 param_names=['IWRmultiplier','RESloss','TBDmultiplier','M_Imultiplier',
              'ShoshoneDMND','ENVflows','EVAdelta','XBM_mu0','XBM_sigma0',
-             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift']
-color_list = ["#ff8000", "#b15a29", "#693c99", "#ffff98", "#680c0e", "#a8cfe5", "#fcbd6d", "#e2171a", "#f99998", "#32a02c", "#b2df8a", "#1b77b3", "#104162", "#1b5718","#cbb3d7"] 
+             'XBM_mu1','XBM_sigma1','XBM_p00','XBM_p11', 'shift', 'Interactions', 'N/A']
+color_list = ["#ff8000", "#b15a29", "#693c99", "#ffff98", "#680c0e", "#a8cfe5", 
+              "#fcbd6d", "#e2171a", "#f99998", "#32a02c", "#b2df8a", "#1b77b3", 
+              "#104162", "#1b5718","#cbb3d7","black"] 
         
 structures = pd.read_csv('../../Structures_files/modeled_diversions.csv',index_col=0)
 all_IDs = np.genfromtxt('../../Structures_files/metrics_structures_old.txt',dtype='str').tolist()
@@ -58,6 +60,7 @@ agg_rights['WD'] = [int(ID[:2]) for ID in list(agg_rights.index)]
 wdcounts = agg_rights['WD'].value_counts().sort_index()
 
 indices = pd.read_csv('2002_DELTA_freq.csv',index_col=0)
+indices.insert(0, 'N/A', 0)
 indices['1stFactor'] = indices.idxmax(axis=1)
 indices = indices.reindex(list(demands.index))
 colors = [color_list[param_names.index(f)] for f in indices['1stFactor'].values]
@@ -72,8 +75,9 @@ ax.add_image(tiles, 9, interpolation='none',alpha = 0.8)
 ax.set_extent(extent)
 ax.add_feature(shape_feature, facecolor='#a1a384',alpha = 0.6)
 ax.add_feature(flow_feature, alpha = 0.6, linewidth=1.5, zorder=4)              
-points = ax.scatter(structures['X'], structures['Y'], marker = '.', s = ratio2002*400, c = colors ,transform=ccrs.Geodetic(), zorder=5)
-
+points = ax.scatter(structures['X'], structures['Y'], marker = '.', s = ratio2002*500, c = colors ,transform=ccrs.Geodetic(), zorder=5)
+legend = ax.scatter([-109.069,-105.6],[38.85,40.50],marker = '.', s = [0.1*500,1.0*500], c = 'grey' ,transform=ccrs.Geodetic(), zorder=5)
+plt.show()
 #geom = geometry.box(extent[0],extent[2], extent[1], extent[3])    
 #fig = plt.figure(figsize=(18, 9))
 #ax = plt.axes(projection=tiles.crs)

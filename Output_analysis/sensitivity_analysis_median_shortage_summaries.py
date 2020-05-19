@@ -43,8 +43,13 @@ def sensitivity_analysis_per_structure(ID):
     f_HIS_short_WY = np.sum(f_HIS_short,axis=1)
 
     # Identify percentile for median year (34 for the basin)
-    percentile_2002=int(np.round(scipy.stats.percentileofscore(f_HIS_short_WY, f_HIS_short_WY[34], kind='strict'), decimals=0))
-    
+    percentile_2002=int(np.round(scipy.stats.percentileofscore(f_HIS_short_WY, f_HIS_short_WY[34], kind='mean'), decimals=0))
+    # This is a silly workaround. If kind was set to 'strict' it wouldn't be 
+    # necessary, but 'strict' misses values when the 2002 shortage was the 
+    # smallest above zero. 
+    if percentile_2002==100:
+        percentile_2002=99
+        
     S1 = pd.read_csv('../'+design+'/'+sensitive_output+'_Sensitivity_analysis/'+ ID + '_S1.csv')
     S1_conf = pd.read_csv('../'+design+'/'+sensitive_output+'_Sensitivity_analysis/'+ ID + '_S1_conf.csv')
     DELTA = pd.read_csv('../'+design+'/'+sensitive_output+'_Sensitivity_analysis/'+ ID + '_DELTA.csv')
