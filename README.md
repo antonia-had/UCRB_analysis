@@ -1,6 +1,3 @@
-# To replicate analysis of Hadjimichael et al. (2020) - Earth’s Future
-============================================================
-
 Assuming you have:
 ------------------
 1. StateMod files from https://github.com/antonia-had/cdss-app-statemod-fortran
@@ -17,3 +14,7 @@ Steps:
 5. Generate shortage duration curves and sensitivity analysis curves using shortage_duration_curves.py and .sh
 6. Get streamflows for 15-mile reach (needed for robustness analysis) using 15mile_streamflow.py and .sh
 7. Perform scenario discovery using LR_factor_mapping.py and .sh
+
+These scripts can be used to replicate:
+ - Hadjimichael, A., Quinn, J.D., Reed, P.M., Yates, D. Wilson, E., Basdekas, L., Defining robustness, vulnerabilities, and consequential scenarios for diverse stakeholder interests within the Upper Colorado River Basin. Earth’s Future, doi: 10.1029/2020EF001503
+ - Hadjimichael, A., Quinn, J.D., Reed, Advancing diagnostic model evaluation to better understand water shortage mechanisms in institutionally complex river basins. Water Resources Research (submitted)
